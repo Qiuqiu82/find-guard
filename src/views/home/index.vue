@@ -729,6 +729,26 @@ onUnmounted(() => {
 const showSuccessText = ref(false);
 const showStars = ref(false);
 
+// 计算半心的样式，使其在视觉上与其他心形保持一致
+const halfHeartStyle = computed(() => {
+  const isMobile = windowWidth.value <= 768;
+  if (isMobile) {
+    return {
+      width: '30px',
+      height: '26px',
+      transform: 'scale(1.1) translateX(-1px)',
+      objectFit: 'contain' as const
+    };
+  } else {
+    return {
+      width: '57px',
+      height: '50px',
+      transform: 'scale(1.1) translateX(-2px)',
+      objectFit: 'contain' as const
+    };
+  }
+});
+
 watch(gameOver, async (val) => {
   if (val) {
     showSuccessText.value = false;
@@ -750,7 +770,11 @@ watch(gameOver, async (val) => {
       <div class="hearts">
         <div class="heart" v-for="i in 3" :key="i">
           <img v-if="hearts >= i" src="/src/assets/icon/a-all.png" class="heart-full" alt="满爱心" />
-          <img v-else-if="hearts === i - 0.5" src="/src/assets/icon/a-half.png" class="heart-half" alt="半爱心" />
+          <img v-else-if="hearts === i - 0.5" 
+               src="/src/assets/icon/a-half.png" 
+               class="heart-half" 
+               alt="半爱心"
+               :style="halfHeartStyle" />
           <img class="heart-empty" v-else src="/src/assets/icon/a-null.png" alt="空爱心" />
         </div>
       </div>
@@ -1080,24 +1104,16 @@ watch(gameOver, async (val) => {
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
 }
 
-.heart-full {
-  width: 57px;
-  height: 50px;
-  object-fit: contain;
-}
-
-.heart-half {
-  width: 62px;
-  height: 62px;
-  object-fit: contain;
-}
-
+.heart-full,
+.heart-half,
 .heart-empty {
   width: 57px;
   height: 50px;
   object-fit: contain;
+  display: block;
 }
 
 .timer-container {
@@ -1749,7 +1765,14 @@ button {
     margin-left: 10px;
   }
   
-  .heart, .heart-full, .heart-half {
+  .heart {
+    width: 30px;
+    height: 26px;
+  }
+  
+  .heart-full,
+  .heart-half,
+  .heart-empty {
     width: 30px;
     height: 26px;
   }
