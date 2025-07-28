@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, watch, onUnmounted } from 'vue';
+import { ref, onMounted, computed, watch, onUnmounted, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
@@ -47,8 +47,8 @@ const allGameLevels: GameLevel[] = [
         width: 240, 
         height: 40, 
         found: false, 
-        highlightTitle: '不合法的发件域名',
-        highlightDetail: '收到福利邮件注意，先检查一下发件人的邮箱地址'
+        highlightTitle: '注意辨别发件主题',
+        highlightDetail: '邮件主题为通知的，需格外注意邮件真实性'
       },
       { 
         x: 127, 
@@ -56,8 +56,8 @@ const allGameLevels: GameLevel[] = [
         width: 300, 
         height: 33, 
         found: false, 
-        highlightTitle: '可疑邮箱地址',
-        highlightDetail: '发件人邮箱域名与公司邮箱不一致，可能是钓鱼邮件'
+        highlightTitle: '发件人邮箱异常',
+        highlightDetail: '发件人伪造安全服务中心，需要核实实际域名是否为公司内部真实域名'
       },
       { 
         x: 140, 
@@ -65,8 +65,8 @@ const allGameLevels: GameLevel[] = [
         width: 140, 
         height: 34, 
         found: false, 
-        highlightTitle: '紧急内容',
-        highlightDetail: '内容制造紧张气氛，催促用户立即行动，是钓鱼邮件常用手法'
+        highlightTitle: '正文内容要留心',
+        highlightDetail: '邮件内容包含登录地点异常，制造紧张气氛，首先通过邮箱网站进行查询'
       },
       { 
         x: 140, 
@@ -74,8 +74,8 @@ const allGameLevels: GameLevel[] = [
         width: 125, 
         height: 59, 
         found: false, 
-        highlightTitle: '可疑链接',
-        highlightDetail: '不要点击邮件中的链接，应通过官方网站或APP进行操作'
+        highlightTitle: '注意邮件链接',
+        highlightDetail: '避免从邮件内部重置密码链接进行点击访问，如需重置密码通过官方途径进行'
       }
     ]
   },
@@ -120,8 +120,8 @@ const allGameLevels: GameLevel[] = [
         width: 135, 
         height: 45, 
         found: false, 
-        highlightTitle: '可疑附件',
-        highlightDetail: '不要下载或打开来源不明的附件，可能包含病毒'
+        highlightTitle: '访问网站需要有证书',
+        highlightDetail: '访问网站如果显示不安全，采用http访问，需要格外注意数据安全性，有被盗取数据的风险'
       },
       { 
         x: 205, 
@@ -129,8 +129,8 @@ const allGameLevels: GameLevel[] = [
         width: 138, 
         height: 45, 
         found: false, 
-        highlightTitle: '危险文件格式',
-        highlightDetail: '特别警惕.exe等可执行文件，可能包含恶意程序'
+        highlightTitle: '网站域名要核对',
+        highlightDetail: '访问网站记得核对域名，与企业真实域名存在差异'
       },
       { 
         x: 130, 
@@ -138,17 +138,17 @@ const allGameLevels: GameLevel[] = [
         width: 180, 
         height: 45, 
         found: false, 
-        highlightTitle: '隐藏链接',
-        highlightDetail: '链接可能导向恶意网站，造成信息泄露或病毒感染'
+        highlightTitle: '网站布局异常',
+        highlightDetail: '企业logo名称存在少字的情况需要格外注意，有可能是伪造网站'
       },
       { 
         x: 890, 
         y: 360, 
         width: 320, 
-        height:250, 
+        height: 250, 
         found: false, 
-        highlightTitle: '隐藏链接',
-        highlightDetail: '链接可能导向恶意网站，造成信息泄露或病毒感染'
+        highlightTitle: '登录内容注意甄别',
+        highlightDetail: '公共网站登录途径一般比较多，如果只是单一账号访问，并且没有注册等选项需要额外注意'
       }
     ]
   },
@@ -161,8 +161,8 @@ const allGameLevels: GameLevel[] = [
         width: 250, 
         height: 40, 
         found: false, 
-        highlightTitle: '可疑好友请求',
-        highlightDetail: '不要随意接受陌生人的好友请求，可能是社交媒体钓鱼'
+        highlightTitle: '发件人邮箱注意看',
+        highlightDetail: '收到福利邮件注意，先检查一下发件人的邮箱地址'
       },
       { 
         x: 623, 
@@ -170,8 +170,8 @@ const allGameLevels: GameLevel[] = [
         width: 140, 
         height: 50, 
         found: false, 
-        highlightTitle: '信息过度分享',
-        highlightDetail: '不要在社交媒体上过度分享个人敏感信息'
+        highlightTitle: '邮件链接要判断',
+        highlightDetail: '带链接的按钮一定先甄别网站的真实性'
       },
       { 
         x: 720, 
@@ -179,8 +179,8 @@ const allGameLevels: GameLevel[] = [
         width: 100, 
         height: 25, 
         found: false, 
-        highlightTitle: '可疑分享链接',
-        highlightDetail: '不要点击来源不明的分享链接，可能包含恶意代码'
+        highlightTitle: '客服电话要验证真伪',
+        highlightDetail: '带人工客服电话的邮件，可以网上核实是否为真实客服'
       }
     ]
   },
@@ -193,8 +193,8 @@ const allGameLevels: GameLevel[] = [
         width: 260, 
         height: 50, 
         found: false, 
-        highlightTitle: '虚假中奖',
-        highlightDetail: '突然收到中大奖信息，很可能是诈骗手段'
+        highlightTitle: '发件人邮箱注意看',
+        highlightDetail: '收到公司内部邮件注意先检查一下发件人的邮箱地址，是否与公司域名一致'
       },
       { 
         x: 565, 
@@ -202,8 +202,8 @@ const allGameLevels: GameLevel[] = [
         width: 180, 
         height: 65, 
         found: false, 
-        highlightTitle: '索要银行信息',
-        highlightDetail: '骗子常以中奖为由索要银行账户等敏感信息'
+        highlightTitle: '邮件链接要判断',
+        highlightDetail: '带链接的按钮一定先甄别网站的真实性'
       },
       { 
         x: 50, 
@@ -211,8 +211,8 @@ const allGameLevels: GameLevel[] = [
         width: 210, 
         height: 66, 
         found: false, 
-        highlightTitle: '要求转账',
-        highlightDetail: '不要向陌生账户转账或支付所谓的手续费'
+        highlightTitle: '客服电话要验证真伪',
+        highlightDetail: '带人工客服电话的邮件，可以网上核实是否为真实客服'
       }
     ]
   },
@@ -225,8 +225,8 @@ const allGameLevels: GameLevel[] = [
         width: 210, 
         height: 25, 
         found: false, 
-        highlightTitle: '虚假客服',
-        highlightDetail: '官方客服不会主动联系要求操作账户或提供密码'
+        highlightTitle: '发件人邮箱注意看',
+        highlightDetail: '收到公司内部邮件注意先检查一下发件人的邮箱地址，是否与公司域名一致'
       },
       { 
         x: 380, 
@@ -234,10 +234,9 @@ const allGameLevels: GameLevel[] = [
         width: 490, 
         height: 50, 
         found: false, 
-        highlightTitle: '身份验证',
-        highlightDetail: '应通过官方渠道确认客服身份，不要轻信来电显示'
-      },
-      
+        highlightTitle: '邮件链接要判断',
+        highlightDetail: '邮件显示的链接不一定是真实链接，可以把鼠标放上去或者链接复制出来核对真实链接地址'
+      }
     ]
   },
   {
@@ -249,8 +248,8 @@ const allGameLevels: GameLevel[] = [
         width: 510, 
         height: 35, 
         found: false, 
-        highlightTitle: '公共WiFi',
-        highlightDetail: '避免在公共WiFi上处理银行等敏感信息'
+        highlightTitle: '邮件主题需要警惕',
+        highlightDetail: '系统告警了通知优先通过内部群聊电话找安全部门确认'
       },
       { 
         x: 60, 
@@ -258,8 +257,8 @@ const allGameLevels: GameLevel[] = [
         width: 430, 
         height: 35, 
         found: false, 
-        highlightTitle: '网络保护',
-        highlightDetail: '使用VPN保护网络连接，防止信息被窃取'
+        highlightTitle: '发件邮箱要核对',
+        highlightDetail: '核对发件人邮箱地址是否为真实的公司内部域名'
       },
       { 
         x: 0, 
@@ -267,8 +266,8 @@ const allGameLevels: GameLevel[] = [
         width: 625, 
         height: 42, 
         found: false, 
-        highlightTitle: '数据保护',
-        highlightDetail: '定期更新密码和安全软件，提高账户安全性'
+        highlightTitle: '需要点链接要判断',
+        highlightDetail: '邮件链接无法辨别真伪勿乱点随意，点击外链很可能造成电脑中病毒'
       }
     ]
   },
@@ -281,8 +280,8 @@ const allGameLevels: GameLevel[] = [
         width: 330, 
         height: 35, 
         found: false, 
-        highlightTitle: '可疑应用',
-        highlightDetail: '只从官方应用商店下载应用，避免恶意软件'
+        highlightTitle: '邮件主题需要警惕',
+        highlightDetail: '收到企业内部福利专享的邮件，可以内部群聊核实下'
       },
       { 
         x: 30, 
@@ -290,8 +289,8 @@ const allGameLevels: GameLevel[] = [
         width: 380, 
         height: 70, 
         found: false, 
-        highlightTitle: '过度权限',
-        highlightDetail: '警惕应用索要与其功能无关的权限'
+        highlightTitle: '发件邮箱要核对',
+        highlightDetail: '发件人确认是否为公司真实部分，发件人的域名确认是否为公司域名'
       },
       { 
         x: 30, 
@@ -299,8 +298,8 @@ const allGameLevels: GameLevel[] = [
         width: 200, 
         height: 160, 
         found: false, 
-        highlightTitle: '设备安全',
-        highlightDetail: '定期清理和检查应用，卸载不使用的应用'
+        highlightTitle: '二维码不乱扫',
+        highlightDetail: '存在二维码的邮件注意甄别真实性，不要轻易扫码添加'
       },
       { 
         x: 30, 
@@ -308,8 +307,8 @@ const allGameLevels: GameLevel[] = [
         width: 230, 
         height: 30, 
         found: false, 
-        highlightTitle: '设备安全',
-        highlightDetail: '定期清理和检查应用，卸载不使用的应用'
+        highlightTitle: '客服电话先核对',
+        highlightDetail: '涉及热线电话的情况，优先查询客服电话的真实性'
       }
     ]
   },
@@ -322,8 +321,8 @@ const allGameLevels: GameLevel[] = [
         width: 380, 
         height: 40, 
         found: false, 
-        highlightTitle: '社交工程',
-        highlightDetail: '不要轻信陌生人的紧急请求，尤其是涉及金钱的'
+        highlightTitle: '网站域名先观察',
+        highlightDetail: '发现网站存在异常第一时间查看网站域名是否真实'
       },
       { 
         x: 890, 
@@ -331,10 +330,9 @@ const allGameLevels: GameLevel[] = [
         width: 390, 
         height: 360, 
         found: false, 
-        highlightTitle: '信息验证',
-        highlightDetail: '通过其他渠道确认重要请求，不要仅依赖单一信息'
-      },
-      
+        highlightTitle: '账号密码需要辨别',
+        highlightDetail: '登录栏注意甄别获取的账号信息，核实忘记密码等选项的链接是否存在异常'
+      }
     ]
   },
   {
@@ -346,8 +344,8 @@ const allGameLevels: GameLevel[] = [
         width: 560, 
         height: 320, 
         found: false, 
-        highlightTitle: '未锁屏',
-        highlightDetail: '离开座位时锁定电脑屏幕，防止信息泄露'
+        highlightTitle: '会议室白板内容要清理',
+        highlightDetail: '会议室白板的工作讨论内容离开时要擦除干净'
       },
       { 
         x: 520, 
@@ -355,8 +353,8 @@ const allGameLevels: GameLevel[] = [
         width: 210, 
         height: 180, 
         found: false, 
-        highlightTitle: '敏感文件',
-        highlightDetail: '不在公共区域处理敏感文件，防止被窥视'
+        highlightTitle: '员工离开要锁屏',
+        highlightDetail: '员工离开工位电脑要及时锁屏'
       },
       { 
         x: 430, 
@@ -364,8 +362,8 @@ const allGameLevels: GameLevel[] = [
         width: 340, 
         height: 70, 
         found: false, 
-        highlightTitle: '信息保护',
-        highlightDetail: '遵守公司信息安全制度，保护敏感数据'
+        highlightTitle: '文件要及时收起',
+        highlightDetail: '涉及的文件及时收起来'
       }
     ]
   },
@@ -378,8 +376,8 @@ const allGameLevels: GameLevel[] = [
         width: 160, 
         height: 60, 
         found: false, 
-        highlightTitle: '会议保密',
-        highlightDetail: '注意会议内容保密，不在公共场所讨论'
+        highlightTitle: '密码不要明文展示',
+        highlightDetail: '电脑开机密码直接贴在桌面上，容易被利用'
       },
       { 
         x: 760, 
@@ -387,8 +385,8 @@ const allGameLevels: GameLevel[] = [
         width: 140, 
         height: 50, 
         found: false, 
-        highlightTitle: '屏幕保护',
-        highlightDetail: '使用防窥屏或调整角度，避免敏感信息被窥视'
+        highlightTitle: 'U盘用完及时拔出',
+        highlightDetail: 'U盘用完及时拔出，避免数据丢失或窃取'
       },
       { 
         x: 880, 
@@ -396,8 +394,8 @@ const allGameLevels: GameLevel[] = [
         width: 330, 
         height: 50, 
         found: false, 
-        highlightTitle: '资料处理',
-        highlightDetail: '妥善处理会议文件，不要随意丢弃敏感资料'
+        highlightTitle: '合同文件安全存放',
+        highlightDetail: '合同文件用完存放在安全位置，避免随处摆放'
       },
       { 
         x: 160, 
@@ -405,8 +403,8 @@ const allGameLevels: GameLevel[] = [
         width: 570, 
         height: 327, 
         found: false, 
-        highlightTitle: '资料处理',
-        highlightDetail: '妥善处理会议文件，不要随意丢弃敏感资料'
+        highlightTitle: '离开工位要锁屏',
+        highlightDetail: '离开工位，请即时锁屏'
       }
     ]
   },
@@ -419,8 +417,8 @@ const allGameLevels: GameLevel[] = [
         width: 330, 
         height: 180, 
         found: false, 
-        highlightTitle: '数据备份',
-        highlightDetail: '定期备份重要数据，防止数据丢失'
+        highlightTitle: '敏感文件即用即取',
+        highlightDetail: '打印机内部敏感文件，即用即取，避免放在公共区域'
       },
       { 
         x: 630, 
@@ -428,8 +426,8 @@ const allGameLevels: GameLevel[] = [
         width: 380, 
         height: 180, 
         found: false, 
-        highlightTitle: '数据加密',
-        highlightDetail: '使用加密方式存储敏感信息，提高安全性'
+        highlightTitle: '手机要及时锁屏',
+        highlightDetail: '个人手机要及时锁屏，请妥善保管好'
       }
     ]
   }
@@ -727,6 +725,21 @@ onUnmounted(() => {
     window.removeEventListener('resize', updateWindowWidth);
   }
 });
+
+const showSuccessText = ref(false);
+const showStars = ref(false);
+
+watch(gameOver, async (val) => {
+  if (val) {
+    showSuccessText.value = false;
+    showStars.value = false;
+    await nextTick();
+    showStars.value = true;
+    setTimeout(() => {
+      showSuccessText.value = true;
+    }, 600); // 星星动画0.3*3=0.9s，文字在0.6s时开始淡入
+  }
+});
 </script>
 
 <template>
@@ -736,9 +749,9 @@ onUnmounted(() => {
       <!-- 爱心生命值 -->
       <div class="hearts">
         <div class="heart" v-for="i in 3" :key="i">
-          <img v-if="hearts >= i" src="@/assets/icon/heart-all.png" class="heart-full" alt="满爱心" />
-          <img v-else-if="hearts === i - 0.5" src="@/assets/icon/half-heart1.png" class="heart-half" alt="半爱心" />
-          <div class="heart-empty" v-else>❤</div>
+          <img v-if="hearts >= i" src="/src/assets/icon/a-all.png" class="heart-full" alt="满爱心" />
+          <img v-else-if="hearts === i - 0.5" src="/src/assets/icon/a-half.png" class="heart-half" alt="半爱心" />
+          <img class="heart-empty" v-else src="/src/assets/icon/a-null.png" alt="空爱心" />
         </div>
       </div>
       
@@ -761,9 +774,9 @@ onUnmounted(() => {
         
         <!-- 关卡进度 -->
         <div class="level-progress">
-          <span class="level-number">{{ currentLevel }}</span>
+          <span class="level-current">{{ currentLevel }}</span>
           <span class="level-slash">/</span>
-          <span class="level-number">{{ totalLevels }}</span>
+          <span class="level-total">{{ totalLevels }}</span>
         </div>
       </div>
       
@@ -804,25 +817,97 @@ onUnmounted(() => {
             }"
           ></div>
           
-          <!-- 连接线 - 完全重写实现 -->
-          <!-- 点位在右侧时的连接线 - 向左延伸 -->
-          <div 
-            v-for="(point, index) in puzzlePoints" 
-            :key="`line-${index}`"
-            v-show="point.found"
-            :class="['connection-line', isPointNearRightEdge(point) ? 'connection-line-left' : 'connection-line-right']"
-            :style="{
-              position: 'absolute',
-              left: isPointNearRightEdge(point) ? `${point.x - 230}px` : `${point.x + point.width}px`,
-              top: `${point.y + point.height/2}px`,
-              width: isPointNearRightEdge(point) ? '230px' : '80px', // 直接设置宽度
-              height: '3px', // 增加线宽以便更明显
-              backgroundColor: '#1a175d',
-              zIndex: 10,
-              transform: 'translateY(-50%)'
-            }"
-            :data-index="index"
-          ></div>
+          <!-- 连接线渲染，消除v-for和v-if混用 -->
+          <div v-for="(point, index) in puzzlePoints" :key="`line-${index}`" v-show="point.found">
+            <!-- 图9点2、图3点4：整体下移100px并加长 -->
+            <template v-if="(currentLevelData.image.includes('画板 9.jpg') && index === 1) || (currentLevelData.image.includes('画板 3.jpg') && index === 3)">
+              <div
+                :class="['connection-line', isPointNearRightEdge(point) ? 'connection-line-left' : 'connection-line-right']"
+                :style="{
+                  position: 'absolute',
+                  left: isPointNearRightEdge(point) ? `${point.x - 230}px` : `${point.x + point.width}px`,
+                  top: `${point.y + point.height/2 + 100}px`,
+                  width: isPointNearRightEdge(point) ? '260px' : '120px',
+                  height: '3px',
+                  backgroundColor: '#1a175d',
+                  zIndex: 10,
+                  transform: 'translateY(-50%)'
+                }"
+                :data-index="index"
+              ></div>
+            </template>
+            <!-- 图3点1：折线（竖150px，横150px，竖线起点右移30px） -->
+            <template v-else-if="currentLevelData.image.includes('画板 3.jpg') && index === 0">
+              <!-- 竖线 -->
+              <div
+                :style="{
+                  position: 'absolute',
+                  left: `${point.x + 30}px`,
+                  top: `${point.y + point.height}px`,
+                  width: '3px',
+                  height: '150px',
+                  backgroundColor: '#1a175d',
+                  zIndex: 10
+                }"
+              ></div>
+              <!-- 横线 -->
+              <div
+                :style="{
+                  position: 'absolute',
+                  left: `${point.x + 30}px`,
+                  top: `${point.y + point.height + 150}px`,
+                  width: '150px',
+                  height: '3px',
+                  backgroundColor: '#1a175d',
+                  zIndex: 10
+                }"
+              ></div>
+            </template>
+            <!-- 图6点2：折线（竖30px，横30px，竖线起点为下边线中间） -->
+            <template v-else-if="currentLevelData.image.includes('画板 6.jpg') && index === 1">
+              <!-- 竖线 -->
+              <div
+                :style="{
+                  position: 'absolute',
+                  left: `${point.x + point.width/2}px`,
+                  top: `${point.y + point.height}px`,
+                  width: '3px',
+                  height: '30px',
+                  backgroundColor: '#1a175d',
+                  zIndex: 10
+                }"
+              ></div>
+              <!-- 横线 -->
+              <div
+                :style="{
+                  position: 'absolute',
+                  left: `${point.x + point.width/2}px`,
+                  top: `${point.y + point.height + 30}px`,
+                  width: '30px',
+                  height: '3px',
+                  backgroundColor: '#1a175d',
+                  zIndex: 10
+                }"
+              ></div>
+            </template>
+            <!-- 其他点：直线 -->
+            <template v-else>
+              <div
+                :class="['connection-line', isPointNearRightEdge(point) ? 'connection-line-left' : 'connection-line-right']"
+                :style="{
+                  position: 'absolute',
+                  left: isPointNearRightEdge(point) ? `${point.x - 230}px` : `${point.x + point.width}px`,
+                  top: `${point.y + point.height/2}px`,
+                  width: isPointNearRightEdge(point) ? '230px' : '80px',
+                  height: '3px',
+                  backgroundColor: '#1a175d',
+                  zIndex: 10,
+                  transform: 'translateY(-50%)'
+                }"
+                :data-index="index"
+              ></div>
+            </template>
+          </div>
           
           <!-- 高亮区域标题和详细说明 -->
           <div 
@@ -831,12 +916,22 @@ onUnmounted(() => {
             v-show="point.found"
             class="highlight-container"
             :style="{
-              top: `${point.y + point.height/2 - 30}px`,
+              top: (currentLevelData.image.includes('画板 9.jpg') && index === 1) || (currentLevelData.image.includes('画板 3.jpg') && index === 3)
+                ? `${point.y + point.height/2 + 100 - 30}px`
+                : (currentLevelData.image.includes('画板 3.jpg') && index === 0)
+                  ? `${point.y + point.height + 150 - 30}px`
+                  : (currentLevelData.image.includes('画板 6.jpg') && index === 1)
+                    ? `${point.y + point.height + 30 - 30}px`
+                    : `${point.y + point.height/2 - 30}px`,
               left: isPointNearRightEdge(point) 
-                ? `${point.x - 230}px` // 点位靠右，容器更靠近点位
-                : `${point.x + point.width + 80}px`, // 点位靠左，容器放在右侧
+                ? `${point.x - 230}px` 
+                : (currentLevelData.image.includes('画板 3.jpg') && index === 0)
+                  ? `${point.x + 180}px`
+                  : (currentLevelData.image.includes('画板 6.jpg') && index === 1)
+                    ? `${point.x + point.width/2 + 30}px`
+                    : `${point.x + point.width + 80}px`,
               right: 'auto',
-              zIndex: 20 // 确保在连接线上方
+              zIndex: 20
             }"
             :ref="`highlightContainer-${index}`"
             :data-position="isPointNearRightEdge(point) ? 'left' : 'right'"
@@ -908,8 +1003,25 @@ onUnmounted(() => {
       <!-- 游戏结束 -->
       <div v-if="gameOver" class="game-result">
         <div class="result-image-container">
-          <img v-if="gameSuccess" src="@/assets/images/success.png" alt="恭喜过关" class="result-image" @click="gameSuccess && currentLevel < totalLevels ? continueGame() : restartGame()" />
-          <img v-else src="@/assets/images/failed.png" alt="闯关失败" class="result-image" @click="restartGame" />
+          <div class="star-animate-bg">
+            <img class="star-bg" src="@/assets/images/bg.png" alt="bg" />
+            <div class="star-group" v-if="showStars">
+              <img class="star star1" :src="hearts > 0 ? '/src/assets/icon/one-star.png' : '/src/assets/icon/empty.png'" />
+              <img class="star star2 star-middle" :src="hearts > 0 ? '/src/assets/icon/one-star.png' : '/src/assets/icon/empty.png'" />
+              <img class="star star3" :src="hearts > 0 ? '/src/assets/icon/one-star.png' : '/src/assets/icon/empty.png'" />
+            </div>
+            <div class="success-text" :class="{ show: showSuccessText }">{{ hearts > 0 ? '恭喜过关' : '闯关失败' }}</div>
+            <button
+              v-if="hearts > 0 && currentLevel < totalLevels"
+              class="game-result-btn"
+              @click="continueGame"
+            >继续游戏</button>
+            <button
+              v-else
+              class="game-result-btn"
+              @click="restartGame"
+            >重新游戏</button>
+          </div>
         </div>
       </div>
     </div>
@@ -956,7 +1068,7 @@ onUnmounted(() => {
 
 .hearts {
   display: flex;
-  gap: 5px;
+  gap: 8px;
   margin-left: 30px;
   margin-top: 0; /* 移除向下偏移 */
 }
@@ -977,16 +1089,15 @@ onUnmounted(() => {
 }
 
 .heart-half {
-  width: 57px;
-  height: 50px;
+  width: 62px;
+  height: 62px;
   object-fit: contain;
 }
 
 .heart-empty {
-  font-size: 32px;
-  color: #646c9a;
-  opacity: 0.5;
-  line-height: 1;
+  width: 57px;
+  height: 50px;
+  object-fit: contain;
 }
 
 .timer-container {
@@ -1014,12 +1125,14 @@ onUnmounted(() => {
   border: 2px solid #00c8ff;
   width: 100%;
   max-width: 440px;
+  justify-content: space-between; /* 让时间块和数字分别在两端 */
 }
 
 .timer-blocks {
   display: flex;
   gap: 5px;
-  justify-content: center;
+  justify-content: flex-start;
+  align-items: center;
 }
 
 .time-block {
@@ -1037,7 +1150,12 @@ onUnmounted(() => {
   color: #00c8ff;
   font-weight: bold;
   font-size: 20px;
-  margin-left: 10px;
+  margin-left: 0; /* 移除左边距，因为已经用space-between分隔 */
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 48px; /* 保证数字宽度一致 */
 }
 
 .level-progress {
@@ -1047,16 +1165,22 @@ onUnmounted(() => {
   white-space: nowrap;
 }
 
-.level-number {
-  font-size: 50px;
+.level-current {
+  font-size: 42px;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.level-total {
+  font-size: 32px;
   font-weight: bold;
   line-height: 1;
 }
 
 .level-slash {
-  font-size: 20px;
+  font-size: 26px;
   font-weight: bold;
-  margin: 0 2px;
+  margin: 0 4px;
   line-height: 1;
 }
 
@@ -1135,7 +1259,7 @@ onUnmounted(() => {
   position: absolute;
   background-color: rgba(249, 239, 240, 0.4); /* 浅粉色背景带更高透明度 */
   border: 2.5px solid #1a175d; /* 加粗的深蓝色边框 */
-  border-radius: 12px; /* 圆弧矩形 */
+  border-radius: 30px; /* 圆弧矩形 */
   z-index: 5;
   display: flex;
   flex-direction: column;
@@ -1444,6 +1568,101 @@ button {
 @keyframes red-flash {
   0% { opacity: 0.2; }
   100% { opacity: 1; }
+}
+
+.star-animate-bg {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 480px;
+  height: 360px;
+  max-width: 95vw;
+  max-height: 80vh;
+  transform: translate(-50%, -50%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.star-bg {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 32px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+  position: absolute;
+  left: 0; top: 0;
+  z-index: 1;
+}
+.star-group {
+  position: absolute;
+  top: 35%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: auto;
+  height: 160px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  z-index: 2;
+}
+.star {
+  width: 85px;
+  height: 85px;
+  margin: 0 -8px; /* 负距离保持美观 */
+  opacity: 0;
+  transform: scale(0.2);
+  animation: star-grow 0.3s cubic-bezier(.5,1.8,.5,1.1) forwards;
+}
+.star1 { animation-delay: 0s; }
+.star2 { animation-delay: 0.3s; }
+.star3 { animation-delay: 0.6s; }
+.star-middle {
+  width: 140px;
+  height: 140px;
+  margin-bottom: -7px;
+}
+
+@keyframes star-grow {
+  0% { opacity: 0; transform: scale(0.2);}
+  60% { opacity: 1; transform: scale(1.2);}
+  100% { opacity: 1; transform: scale(1);}
+}
+
+.success-text {
+  position: absolute;
+  top: 65%;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #09cefb;
+  font-size: 35px;
+  font-weight: bold;
+  opacity: 0;
+  transition: opacity 0.5s;
+  z-index: 3;
+  pointer-events: none;
+  letter-spacing: 0.25em;
+}
+.success-text.show {
+  opacity: 1;
+}
+
+.game-result-btn {
+  position: absolute;
+  left: 50%;
+  top: 95%;
+  transform: translate(-50%, -50%);
+  background: #1e1c72;
+  color: #fff;
+  font-size: 29px;
+  font-weight: bold;
+  border: 7px solid #09cefb;
+  border-radius: 38px;
+  padding: 7px 36px;
+  cursor: pointer;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  transition: none;
+  letter-spacing: 0.08em;
 }
 
 
