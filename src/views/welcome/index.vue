@@ -110,11 +110,9 @@ const closeInstructionsAndStart = (event: MouseEvent) => {
   background-image: url('@/assets/images/instructions.png');
   background-size: cover;
   background-position: center;
-  width: 80%;
-  max-width: 800px;
-  height: 60%;
-  max-height: 600px;
-  border-radius: 12px;
+  width: 100vw;
+  height: 100vh;
+  border-radius: 0;
   padding: 0;
   position: relative;
   z-index: 101;
@@ -133,7 +131,8 @@ const closeInstructionsAndStart = (event: MouseEvent) => {
   }
   
   .instructions-content {
-    width: 90%;
+    width: 100vw;
+    height: 100vh;
     padding: 0;
   }
 }

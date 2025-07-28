@@ -586,6 +586,7 @@ const startTimer = () => {
     if (timeLeft.value > 0) {
       timeLeft.value--;
     } else {
+      // 时间用完，结束游戏
       endGame();
     }
   }, 1000);
@@ -612,6 +613,8 @@ const endGame = () => {
   gameStarted.value = false;
   gameOver.value = true;
   
+  // 只有在爱心还有剩余且所有不同点都找到的情况下才算成功
+  // 如果倒计时结束（timeLeft <= 0）且没有找到所有不同点，则失败
   if (hearts.value > 0 && allPointsFound.value) {
     gameSuccess.value = true;
   } else {
@@ -810,9 +813,7 @@ watch(gameOver, async (val) => {
         
         <!-- 主页图标 -->
         <div class="home-icon" @click="goToHome">
-          <svg width="24px" height="24px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12,2.09814107 L22,10.998141 L22,21.9981411 L15,21.9981411 L15,14.9981411 L9,14.9981411 L9,21.9981411 L2,21.9981411 L2,10.998141 L12,2.09814107 Z" fill="#1e1c72"/>
-          </svg>
+          <img src="/src/assets/icon/home.png" alt="主页" />
         </div>
       </div>
     </div>
@@ -826,6 +827,11 @@ watch(gameOver, async (val) => {
       <template v-if="gameStarted && !gameOver">
         <div class="game-image" @click="handleImageClick">
           <img :src="currentLevelData.image" alt="找不同游戏图" />
+          
+          <!-- 已发现状态 -->
+          <div class="found-status-game">
+            已发现: {{ foundPoints }}/{{ puzzlePoints.length }}
+          </div>
           
           <!-- 显示已找到的解密点高亮区域 -->
           <div 
@@ -993,9 +999,6 @@ watch(gameOver, async (val) => {
           </template>
         </div>
         <div class="game-status">
-          <div class="found-status">
-            已发现: {{ foundPoints }}/{{ puzzlePoints.length }}
-          </div>
           <!-- 调试模式控制 -->
           <div v-if="debugMode" class="debug-controls">
             <div class="debug-label">调试模式：</div>
@@ -1030,13 +1033,13 @@ watch(gameOver, async (val) => {
           <div class="star-animate-bg">
             <img class="star-bg" src="@/assets/images/bg.png" alt="bg" />
             <div class="star-group" v-if="showStars">
-              <img class="star star1" :src="hearts > 0 ? '/src/assets/icon/one-star.png' : '/src/assets/icon/empty.png'" />
-              <img class="star star2 star-middle" :src="hearts > 0 ? '/src/assets/icon/one-star.png' : '/src/assets/icon/empty.png'" />
-              <img class="star star3" :src="hearts > 0 ? '/src/assets/icon/one-star.png' : '/src/assets/icon/empty.png'" />
+              <img class="star star1" :src="gameSuccess ? '/src/assets/icon/one-star.png' : '/src/assets/icon/empty.png'" />
+              <img class="star star2 star-middle" :src="gameSuccess ? '/src/assets/icon/one-star.png' : '/src/assets/icon/empty.png'" />
+              <img class="star star3" :src="gameSuccess ? '/src/assets/icon/one-star.png' : '/src/assets/icon/empty.png'" />
             </div>
-            <div class="success-text" :class="{ show: showSuccessText }">{{ hearts > 0 ? '恭喜过关' : '闯关失败' }}</div>
+            <div class="success-text" :class="{ show: showSuccessText }">{{ gameSuccess ? '恭喜过关' : '闯关失败' }}</div>
             <button
-              v-if="hearts > 0 && currentLevel < totalLevels"
+              v-if="gameSuccess && currentLevel < totalLevels"
               class="game-result-btn"
               @click="continueGame"
             >继续游戏</button>
@@ -1120,8 +1123,8 @@ watch(gameOver, async (val) => {
   display: flex;
   align-items: center;
   flex: 1;
-  max-width: 600px;
-  margin: 0 20px;
+  max-width: 700px;
+  margin: 0 8px;
   margin-top: 0; /* 移除向下偏移 */
 }
 
@@ -1140,7 +1143,7 @@ watch(gameOver, async (val) => {
   padding: 6px 12px;
   border: 2px solid #00c8ff;
   width: 100%;
-  max-width: 440px;
+  max-width: 540px;
   justify-content: space-between; /* 让时间块和数字分别在两端 */
 }
 
@@ -1155,7 +1158,7 @@ watch(gameOver, async (val) => {
   width: 30px;
   height: 30px;
   background-color: #00c8ff;
-  border-radius: 13px;
+  border-radius: 11px;
 }
 
 .time-block:not(.active) {
@@ -1177,7 +1180,7 @@ watch(gameOver, async (val) => {
 .level-progress {
   display: flex;
   align-items: center;
-  margin-left: 20px;
+  margin-left: 10px;
   white-space: nowrap;
 }
 
@@ -1207,19 +1210,19 @@ watch(gameOver, async (val) => {
 }
 
 .instruction {
-  font-size: 30px;
-  color: #4b4c9c;
+  font-size: 26px;
+  color: #7680c0;
   white-space: nowrap;
-  margin-left: 7px;
+  margin-left: 0px;
   margin-right: 20px;
 }
 
 .home-icon {
-  width: 40px;
-  height: 40px;
+  width: 55px;
+  height: 55px;
   border-radius: 50%;
   overflow: hidden;
-  background-color: #ffffff;
+  background-color: transparent;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -1227,9 +1230,10 @@ watch(gameOver, async (val) => {
   margin-right: 20px; /* 恢复右边距 */
 }
 
-.home-icon svg {
-  width: 28px;
-  height: 28px;
+.home-icon img {
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
 }
 
 .game-area {
@@ -1489,6 +1493,18 @@ watch(gameOver, async (val) => {
   font-size: 14px;
 }
 
+.found-status-game {
+  position: absolute;
+  top: 35px;
+  right: 60px;
+  background-color: #1e1c72;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  z-index: 15;
+}
+
 .game-result {
   position: absolute;
   top: 0;
@@ -1731,7 +1747,7 @@ button {
   }
   
   .timer-container {
-    margin: 0 10px;
+    margin: 0 8px;
   }
 
   .timer-wrapper {
@@ -1759,6 +1775,7 @@ button {
     font-size: 14px;
     margin-left: 15px;
     margin-right: 6px;
+    
   }
   
   .hearts {
@@ -1778,14 +1795,15 @@ button {
   }
   
   .home-icon {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     margin-right: 10px;
   }
   
-  .home-icon svg {
-    width: 20px;
-    height: 20px;
+  .home-icon img {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
   }
 }
 
