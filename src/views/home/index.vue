@@ -4,6 +4,9 @@ import { useRouter } from 'vue-router';
 
 const router = useRouter();
 
+// 星星图标计算属性
+const starIcon = computed(() => gameSuccess.value ? '/src/assets/icon/one-star.png' : '/src/assets/icon/empty.png');
+
 // 定义关卡点位类型
 interface PuzzlePoint {
   x: number;
@@ -39,7 +42,7 @@ const pauseTimer = ref(true); // 调试时暂停倒计时
 // 所有可用的游戏图片和提示信息
 const allGameLevels: GameLevel[] = [
   {
-    image: '@/assets/images/pic/画板 1.jpg',
+    image: '/src/assets/images/pic/画板 1.jpg',
     points: [
       { 
         x: 50, 
@@ -80,7 +83,7 @@ const allGameLevels: GameLevel[] = [
     ]
   },
   {
-    image: '@/assets/images/pic/画板 2.jpg',
+    image: '/src/assets/images/pic/画板 2.jpg',
     points: [
       { 
         x: 50, 
@@ -112,7 +115,7 @@ const allGameLevels: GameLevel[] = [
     ]
   },
   {
-    image: '@/assets/images/pic/画板 3.jpg',
+    image: '/src/assets/images/pic/画板 3.jpg',
     points: [
       { 
         x: 70, 
@@ -153,7 +156,7 @@ const allGameLevels: GameLevel[] = [
     ]
   },
   {
-    image: '@/assets/images/pic/画板 4.jpg',
+    image: '/src/assets/images/pic/画板 4.jpg',
     points: [
       { 
         x: 100, 
@@ -185,7 +188,7 @@ const allGameLevels: GameLevel[] = [
     ]
   },
   {
-    image: '@/assets/images/pic/画板 5.jpg',
+    image: '/src/assets/images/pic/画板 5.jpg',
     points: [
       { 
         x: 100, 
@@ -217,7 +220,7 @@ const allGameLevels: GameLevel[] = [
     ]
   },
   {
-    image: '@/assets/images/pic/画板 6.jpg',
+    image: '/src/assets/images/pic/画板 6.jpg',
     points: [
       { 
         x: 120, 
@@ -240,7 +243,7 @@ const allGameLevels: GameLevel[] = [
     ]
   },
   {
-    image: '@/assets/images/pic/画板 7.jpg',
+    image: '/src/assets/images/pic/画板 7.jpg',
     points: [
       { 
         x: 0, 
@@ -272,7 +275,7 @@ const allGameLevels: GameLevel[] = [
     ]
   },
   {
-    image: '@/assets/images/pic/画板 8.jpg',
+    image: '/src/assets/images/pic/画板 8.jpg',
     points: [
       { 
         x: 30, 
@@ -313,7 +316,7 @@ const allGameLevels: GameLevel[] = [
     ]
   },
   {
-    image: '@/assets/images/pic/画板 9.jpg',
+    image: '/src/assets/images/pic/画板 9.jpg',
     points: [
       { 
         x: 60, 
@@ -336,7 +339,7 @@ const allGameLevels: GameLevel[] = [
     ]
   },
   {
-    image: '@/assets/images/pic/12办公安全1.jpg',
+    image: '/src/assets/images/pic/12办公安全1.jpg',
     points: [
       { 
         x: 350, 
@@ -368,7 +371,7 @@ const allGameLevels: GameLevel[] = [
     ]
   },
   {
-    image: '@/assets/images/pic/13办公安全1.jpg',
+    image: '/src/assets/images/pic/13办公安全1.jpg',
     points: [
       { 
         x: 760, 
@@ -409,7 +412,7 @@ const allGameLevels: GameLevel[] = [
     ]
   },
   {
-    image: '@/assets/images/pic/14办公安全1.jpg',
+    image: '/src/assets/images/pic/14办公安全1.jpg',
     points: [
       { 
         x: 20, 
@@ -1035,9 +1038,9 @@ watch(gameOver, async (val) => {
         <div class="star-animate-bg">
           <img class="star-bg" src="@/assets/images/bg.png" alt="bg" />
           <div class="star-group" v-if="showStars">
-            <img class="star star1" :src="gameSuccess ? '@/assets/icon/one-star.png' : '@/assets/icon/empty.png'" />
-            <img class="star star2 star-middle" :src="gameSuccess ? '@/assets/icon/one-star.png' : '@/assets/icon/empty.png'" />
-            <img class="star star3" :src="gameSuccess ? '@/assets/icon/one-star.png' : '@/assets/icon/empty.png'" />
+            <img class="star star1" :src="starIcon" />
+            <img class="star star2 star-middle" :src="starIcon" />
+            <img class="star star3" :src="starIcon" />
           </div>
           <div class="success-text" :class="{ show: showSuccessText }">{{ gameSuccess ? '恭喜过关' : '闯关失败' }}</div>
           <button
