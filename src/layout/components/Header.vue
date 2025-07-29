@@ -1,8 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
-
-const router = useRouter();
+// 当前Header组件暂时不需要任何逻辑
 </script>
 
 <template>

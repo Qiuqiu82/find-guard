@@ -18,7 +18,7 @@ const toggleInstructions = () => {
 };
 
 // 关闭游戏说明并开始游戏
-const closeInstructionsAndStart = (event: MouseEvent) => {
+const closeInstructionsAndStart = () => {
   console.log('关闭游戏说明');
   showInstructions.value = false;
   router.push('/home');

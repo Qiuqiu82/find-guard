@@ -19,6 +19,7 @@
     "vuex-along": "^1.2.13"
   },
   "devDependencies": {
+    "@types/node": "^24.1.0",
     "@vitejs/plugin-vue": "^6.0.0",
     "@vue/tsconfig": "^0.7.0",
     "typescript": "~5.8.3",

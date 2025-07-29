@@ -436,9 +436,9 @@ const allGameLevels: GameLevel[] = [
 // 当前游戏的关卡数据
 const gameLevels = ref<GameLevel[]>([]);
 
-// 当前显示的提示信息
-const currentTip = ref('');
-const showTip = ref(false);
+// 以下变量暂时保留，可能在后续功能中使用
+// const currentTip = ref('');
+// const showTip = ref(false);
 
 // 获取当前关卡数据
 const currentLevelData = computed(() => {
@@ -453,14 +453,14 @@ const puzzlePoints = computed(() => {
   return currentLevelData.value?.points || [];
 });
 
-// 用于存储高亮标题元素的引用
-const titleRefs = ref<Record<string, HTMLElement>>({});
+// 以下功能暂时保留，可能在后续功能中使用
+// const titleRefs = ref<Record<string, HTMLElement>>({});
 
 // 简化连接线逻辑，不再动态调整宽度，避免闪烁
-const simplifiedUpdateLines = () => {
-  // 不再需要复杂的动态宽度计算，CSS已经设置了合适的固定宽度
-  console.log('连接线样式已固定，避免闪烁');
-};
+// const simplifiedUpdateLines = () => {
+//   // 不再需要复杂的动态宽度计算，CSS已经设置了合适的固定宽度
+//   console.log('连接线样式已固定，避免闪烁');
+// };
 
 // 判断点位是否靠近屏幕右边
 const isPointNearRightEdge = (point: PuzzlePoint) => {
@@ -669,7 +669,7 @@ const handleImageClick = (event: MouseEvent) => {
       clickedPoint = true;
       
       // 添加点击反馈效果 - 移除闪烁效果，直接显示透明高亮
-      const gameImage = event.currentTarget as HTMLElement;
+      // const gameImage = event.currentTarget as HTMLElement;
       
       // 检查是否全部找到
       if (allPointsFound.value) {
@@ -1016,7 +1016,7 @@ watch(gameOver, async (val) => {
           <div class="debug-label">选择图片进行调试：</div>
           <div class="debug-image-buttons">
             <button 
-              v-for="(level, index) in allGameLevels" 
+              v-for="(_, index) in allGameLevels" 
               :key="'level-'+index"
               class="debug-image-button"
               @click="jumpToLevel(index)"

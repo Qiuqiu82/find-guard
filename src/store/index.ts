@@ -60,22 +60,22 @@ export default createStore<State>({
     }
   },
   actions: {
-    updateLevel({ commit }: { commit: any }, level: number) {
-      commit('SET_CURRENT_LEVEL', level);
+    updateLevel(context, level: number) {
+      context.commit('SET_CURRENT_LEVEL', level);
     },
-    saveScore({ commit }: { commit: any }, payload: { level: number, score: number }) {
-      commit('SET_SCORE', payload);
+    saveScore(context, payload: { level: number, score: number }) {
+      context.commit('SET_SCORE', payload);
     },
-    login({ commit }: { commit: any }, userInfo: Partial<UserInfo>) {
-      commit('SET_USER_INFO', userInfo);
-      commit('SET_LOGIN_STATE', true);
+    login(context, userInfo: Partial<UserInfo>) {
+      context.commit('SET_USER_INFO', userInfo);
+      context.commit('SET_LOGIN_STATE', true);
     },
-    logout({ commit }: { commit: any }) {
-      commit('SET_USER_INFO', {
+    logout(context) {
+      context.commit('SET_USER_INFO', {
         username: '',
         avatar: ''
       });
-      commit('SET_LOGIN_STATE', false);
+      context.commit('SET_LOGIN_STATE', false);
     }
   },
   modules: {},
