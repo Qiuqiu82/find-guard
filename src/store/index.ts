@@ -1,3 +1,4 @@
+// @ts-ignore
 import { createStore } from 'vuex';
 import createVuexAlong from 'vuex-along';
 
@@ -60,17 +61,17 @@ export default createStore<State>({
     }
   },
   actions: {
-    updateLevel(context, level: number) {
+    updateLevel(context: any, level: number) {
       context.commit('SET_CURRENT_LEVEL', level);
     },
-    saveScore(context, payload: { level: number, score: number }) {
+    saveScore(context: any, payload: { level: number, score: number }) {
       context.commit('SET_SCORE', payload);
     },
-    login(context, userInfo: Partial<UserInfo>) {
+    login(context: any, userInfo: Partial<UserInfo>) {
       context.commit('SET_USER_INFO', userInfo);
       context.commit('SET_LOGIN_STATE', true);
     },
-    logout(context) {
+    logout(context: any) {
       context.commit('SET_USER_INFO', {
         username: '',
         avatar: ''
@@ -80,6 +81,7 @@ export default createStore<State>({
   },
   modules: {},
   plugins: [
+    // @ts-ignore
     createVuexAlong({
       name: 'find-diff-game-storage',
       local: {
