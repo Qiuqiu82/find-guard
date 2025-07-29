@@ -39,7 +39,7 @@ const pauseTimer = ref(true); // 调试时暂停倒计时
 // 所有可用的游戏图片和提示信息
 const allGameLevels: GameLevel[] = [
   {
-    image: '/src/assets/images/pic/画板 1.jpg',
+    image: '@/assets/images/pic/画板 1.jpg',
     points: [
       { 
         x: 50, 
@@ -80,7 +80,7 @@ const allGameLevels: GameLevel[] = [
     ]
   },
   {
-    image: '/src/assets/images/pic/画板 2.jpg',
+    image: '@/assets/images/pic/画板 2.jpg',
     points: [
       { 
         x: 50, 
@@ -112,7 +112,7 @@ const allGameLevels: GameLevel[] = [
     ]
   },
   {
-    image: '/src/assets/images/pic/画板 3.jpg',
+    image: '@/assets/images/pic/画板 3.jpg',
     points: [
       { 
         x: 70, 
@@ -153,7 +153,7 @@ const allGameLevels: GameLevel[] = [
     ]
   },
   {
-    image: '/src/assets/images/pic/画板 4.jpg',
+    image: '@/assets/images/pic/画板 4.jpg',
     points: [
       { 
         x: 100, 
@@ -185,7 +185,7 @@ const allGameLevels: GameLevel[] = [
     ]
   },
   {
-    image: '/src/assets/images/pic/画板 5.jpg',
+    image: '@/assets/images/pic/画板 5.jpg',
     points: [
       { 
         x: 100, 
@@ -217,7 +217,7 @@ const allGameLevels: GameLevel[] = [
     ]
   },
   {
-    image: '/src/assets/images/pic/画板 6.jpg',
+    image: '@/assets/images/pic/画板 6.jpg',
     points: [
       { 
         x: 120, 
@@ -240,7 +240,7 @@ const allGameLevels: GameLevel[] = [
     ]
   },
   {
-    image: '/src/assets/images/pic/画板 7.jpg',
+    image: '@/assets/images/pic/画板 7.jpg',
     points: [
       { 
         x: 0, 
@@ -272,7 +272,7 @@ const allGameLevels: GameLevel[] = [
     ]
   },
   {
-    image: '/src/assets/images/pic/画板 8.jpg',
+    image: '@/assets/images/pic/画板 8.jpg',
     points: [
       { 
         x: 30, 
@@ -313,7 +313,7 @@ const allGameLevels: GameLevel[] = [
     ]
   },
   {
-    image: '/src/assets/images/pic/画板 9.jpg',
+    image: '@/assets/images/pic/画板 9.jpg',
     points: [
       { 
         x: 60, 
@@ -336,7 +336,7 @@ const allGameLevels: GameLevel[] = [
     ]
   },
   {
-    image: '/src/assets/images/pic/12办公安全1.jpg',
+    image: '@/assets/images/pic/12办公安全1.jpg',
     points: [
       { 
         x: 350, 
@@ -368,7 +368,7 @@ const allGameLevels: GameLevel[] = [
     ]
   },
   {
-    image: '/src/assets/images/pic/13办公安全1.jpg',
+    image: '@/assets/images/pic/13办公安全1.jpg',
     points: [
       { 
         x: 760, 
@@ -409,7 +409,7 @@ const allGameLevels: GameLevel[] = [
     ]
   },
   {
-    image: '/src/assets/images/pic/14办公安全1.jpg',
+    image: '@/assets/images/pic/14办公安全1.jpg',
     points: [
       { 
         x: 20, 
@@ -772,13 +772,13 @@ watch(gameOver, async (val) => {
       <!-- 爱心生命值 -->
       <div class="hearts">
         <div class="heart" v-for="i in 3" :key="i">
-          <img v-if="hearts >= i" src="/src/assets/icon/a-all.png" class="heart-full" alt="满爱心" />
+          <img v-if="hearts >= i" src="@/assets/icon/a-all.png" class="heart-full" alt="满爱心" />
           <img v-else-if="hearts === i - 0.5" 
-               src="/src/assets/icon/a-half.png" 
+               src="@/assets/icon/a-half.png" 
                class="heart-half" 
                alt="半爱心"
                :style="halfHeartStyle" />
-          <img class="heart-empty" v-else src="/src/assets/icon/a-null.png" alt="空爱心" />
+          <img class="heart-empty" v-else src="@/assets/icon/a-null.png" alt="空爱心" />
         </div>
       </div>
       
@@ -813,7 +813,7 @@ watch(gameOver, async (val) => {
         
         <!-- 主页图标 -->
         <div class="home-icon" @click="goToHome">
-          <img src="/src/assets/icon/home.png" alt="主页" />
+          <img src="@/assets/icon/home.png" alt="主页" />
         </div>
       </div>
     </div>
@@ -1035,9 +1035,9 @@ watch(gameOver, async (val) => {
         <div class="star-animate-bg">
           <img class="star-bg" src="@/assets/images/bg.png" alt="bg" />
           <div class="star-group" v-if="showStars">
-            <img class="star star1" :src="gameSuccess ? '/src/assets/icon/one-star.png' : '/src/assets/icon/empty.png'" />
-            <img class="star star2 star-middle" :src="gameSuccess ? '/src/assets/icon/one-star.png' : '/src/assets/icon/empty.png'" />
-            <img class="star star3" :src="gameSuccess ? '/src/assets/icon/one-star.png' : '/src/assets/icon/empty.png'" />
+            <img class="star star1" :src="gameSuccess ? '@/assets/icon/one-star.png' : '@/assets/icon/empty.png'" />
+            <img class="star star2 star-middle" :src="gameSuccess ? '@/assets/icon/one-star.png' : '@/assets/icon/empty.png'" />
+            <img class="star star3" :src="gameSuccess ? '@/assets/icon/one-star.png' : '@/assets/icon/empty.png'" />
           </div>
           <div class="success-text" :class="{ show: showSuccessText }">{{ gameSuccess ? '恭喜过关' : '闯关失败' }}</div>
           <button
