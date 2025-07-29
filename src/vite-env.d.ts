@@ -1,7 +1,26 @@
 /// <reference types="vite/client" />
 
+declare module '*.png' {
+  const src: string;
+  export default src;
+}
+
+declare module '*.jpg' {
+  const src: string;
+  export default src;
+}
+
+declare module '*.jpeg' {
+  const src: string;
+  export default src;
+}
+
+declare module '*.gif' {
+  const src: string;
+  export default src;
+}
+
 declare module '*.svg' {
-  import { DefineComponent } from 'vue';
-  const component: DefineComponent;
-  export default component;
+  const src: string;
+  export default src;
 }

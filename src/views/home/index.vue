@@ -2,10 +2,28 @@
 import { ref, onMounted, computed, watch, onUnmounted, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 
+// 静态导入所有图片
+import p1Img from '@/assets/images/pic/p1.jpg';
+import p2Img from '@/assets/images/pic/p2.jpg';
+import p3Img from '@/assets/images/pic/p3.jpg';
+import p4Img from '@/assets/images/pic/p4.jpg';
+import p5Img from '@/assets/images/pic/p5.jpg';
+import p6Img from '@/assets/images/pic/p6.jpg';
+import p7Img from '@/assets/images/pic/p7.jpg';
+import p8Img from '@/assets/images/pic/p8.jpg';
+import p9Img from '@/assets/images/pic/p9.jpg';
+import office12Img from '@/assets/images/pic/office12.jpg';
+import office13Img from '@/assets/images/pic/office13.jpg';
+import office14Img from '@/assets/images/pic/office14.jpg';
+
+// 静态导入星星图标
+import oneStarImg from '@/assets/icon/one-star.png';
+import emptyStarImg from '@/assets/icon/empty.png';
+
 const router = useRouter();
 
 // 星星图标计算属性
-const starIcon = computed(() => gameSuccess.value ? '/src/assets/icon/one-star.png' : '/src/assets/icon/empty.png');
+const starIcon = computed(() => gameSuccess.value ? oneStarImg : emptyStarImg);
 
 // 定义关卡点位类型
 interface PuzzlePoint {
@@ -42,7 +60,7 @@ const pauseTimer = ref(true); // 调试时暂停倒计时
 // 所有可用的游戏图片和提示信息
 const allGameLevels: GameLevel[] = [
   {
-    image: '/src/assets/images/pic/画板 1.jpg',
+    image: p1Img,
     points: [
       { 
         x: 50, 
@@ -83,7 +101,7 @@ const allGameLevels: GameLevel[] = [
     ]
   },
   {
-    image: '/src/assets/images/pic/画板 2.jpg',
+    image: p2Img,
     points: [
       { 
         x: 50, 
@@ -115,7 +133,7 @@ const allGameLevels: GameLevel[] = [
     ]
   },
   {
-    image: '/src/assets/images/pic/画板 3.jpg',
+    image: p3Img,
     points: [
       { 
         x: 70, 
@@ -156,7 +174,7 @@ const allGameLevels: GameLevel[] = [
     ]
   },
   {
-    image: '/src/assets/images/pic/画板 4.jpg',
+    image: p4Img,
     points: [
       { 
         x: 100, 
@@ -188,7 +206,7 @@ const allGameLevels: GameLevel[] = [
     ]
   },
   {
-    image: '/src/assets/images/pic/画板 5.jpg',
+    image: p5Img,
     points: [
       { 
         x: 100, 
@@ -220,7 +238,7 @@ const allGameLevels: GameLevel[] = [
     ]
   },
   {
-    image: '/src/assets/images/pic/画板 6.jpg',
+    image: p6Img,
     points: [
       { 
         x: 120, 
@@ -243,7 +261,7 @@ const allGameLevels: GameLevel[] = [
     ]
   },
   {
-    image: '/src/assets/images/pic/画板 7.jpg',
+    image: p7Img,
     points: [
       { 
         x: 0, 
@@ -275,7 +293,7 @@ const allGameLevels: GameLevel[] = [
     ]
   },
   {
-    image: '/src/assets/images/pic/画板 8.jpg',
+    image: p8Img,
     points: [
       { 
         x: 30, 
@@ -316,7 +334,7 @@ const allGameLevels: GameLevel[] = [
     ]
   },
   {
-    image: '/src/assets/images/pic/画板 9.jpg',
+    image: p9Img,
     points: [
       { 
         x: 60, 
@@ -339,7 +357,7 @@ const allGameLevels: GameLevel[] = [
     ]
   },
   {
-    image: '/src/assets/images/pic/12办公安全1.jpg',
+    image: office12Img,
     points: [
       { 
         x: 350, 
@@ -371,7 +389,7 @@ const allGameLevels: GameLevel[] = [
     ]
   },
   {
-    image: '/src/assets/images/pic/13办公安全1.jpg',
+    image: office13Img,
     points: [
       { 
         x: 760, 
@@ -412,7 +430,7 @@ const allGameLevels: GameLevel[] = [
     ]
   },
   {
-    image: '/src/assets/images/pic/14办公安全1.jpg',
+    image: office14Img,
     points: [
       { 
         x: 20, 
@@ -853,7 +871,7 @@ watch(gameOver, async (val) => {
           <!-- 连接线渲染，消除v-for和v-if混用 -->
           <div v-for="(point, index) in puzzlePoints" :key="`line-${index}`" v-show="point.found">
             <!-- 图9点2、图3点4：整体下移100px并加长 -->
-            <template v-if="(currentLevelData.image.includes('画板 9.jpg') && index === 1) || (currentLevelData.image.includes('画板 3.jpg') && index === 3)">
+            <template v-if="(currentLevelData.image.includes('p9.jpg') && index === 1) || (currentLevelData.image.includes('p3.jpg') && index === 3)">
               <div
                 :class="['connection-line', isPointNearRightEdge(point) ? 'connection-line-left' : 'connection-line-right']"
                 :style="{
@@ -870,7 +888,7 @@ watch(gameOver, async (val) => {
               ></div>
             </template>
             <!-- 图3点1：折线（竖150px，横150px，竖线起点右移30px） -->
-            <template v-else-if="currentLevelData.image.includes('画板 3.jpg') && index === 0">
+            <template v-else-if="currentLevelData.image.includes('p3.jpg') && index === 0">
               <!-- 竖线 -->
               <div
                 :style="{
@@ -897,7 +915,7 @@ watch(gameOver, async (val) => {
               ></div>
             </template>
             <!-- 图6点2：折线（竖30px，横30px，竖线起点为下边线中间） -->
-            <template v-else-if="currentLevelData.image.includes('画板 6.jpg') && index === 1">
+            <template v-else-if="currentLevelData.image.includes('p6.jpg') && index === 1">
               <!-- 竖线 -->
               <div
                 :style="{
@@ -949,18 +967,18 @@ watch(gameOver, async (val) => {
             v-show="point.found"
             class="highlight-container"
             :style="{
-              top: (currentLevelData.image.includes('画板 9.jpg') && index === 1) || (currentLevelData.image.includes('画板 3.jpg') && index === 3)
+              top: (currentLevelData.image.includes('p9.jpg') && index === 1) || (currentLevelData.image.includes('p3.jpg') && index === 3)
                 ? `${point.y + point.height/2 + 100 - 30}px`
-                : (currentLevelData.image.includes('画板 3.jpg') && index === 0)
+                : (currentLevelData.image.includes('p3.jpg') && index === 0)
                   ? `${point.y + point.height + 150 - 30}px`
-                  : (currentLevelData.image.includes('画板 6.jpg') && index === 1)
+                  : (currentLevelData.image.includes('p6.jpg') && index === 1)
                     ? `${point.y + point.height + 30 - 30}px`
                     : `${point.y + point.height/2 - 30}px`,
               left: isPointNearRightEdge(point) 
                 ? `${point.x - 230}px` 
-                : (currentLevelData.image.includes('画板 3.jpg') && index === 0)
+                : (currentLevelData.image.includes('p3.jpg') && index === 0)
                   ? `${point.x + 180}px`
-                  : (currentLevelData.image.includes('画板 6.jpg') && index === 1)
+                  : (currentLevelData.image.includes('p6.jpg') && index === 1)
                     ? `${point.x + point.width/2 + 30}px`
                     : `${point.x + point.width + 80}px`,
               right: 'auto',
