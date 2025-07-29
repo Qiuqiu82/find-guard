@@ -1011,7 +1011,7 @@ watch(gameOver, async (val) => {
           </div>
         </div>
         
-        <!-- 调试模式：图片选择器 -->
+        <!-- 调试模式：图片选择器 提交-->
         <div v-if="debugMode" class="debug-image-selector">
           <div class="debug-label">选择图片进行调试：</div>
           <div class="debug-image-buttons">
@@ -1027,28 +1027,29 @@ watch(gameOver, async (val) => {
         </div>
       </template>
       
-      <!-- 游戏结束 -->
-      <div v-if="gameOver" class="game-result">
-        <div class="result-image-container">
-          <div class="star-animate-bg">
-            <img class="star-bg" src="@/assets/images/bg.png" alt="bg" />
-            <div class="star-group" v-if="showStars">
-              <img class="star star1" :src="gameSuccess ? '/src/assets/icon/one-star.png' : '/src/assets/icon/empty.png'" />
-              <img class="star star2 star-middle" :src="gameSuccess ? '/src/assets/icon/one-star.png' : '/src/assets/icon/empty.png'" />
-              <img class="star star3" :src="gameSuccess ? '/src/assets/icon/one-star.png' : '/src/assets/icon/empty.png'" />
-            </div>
-            <div class="success-text" :class="{ show: showSuccessText }">{{ gameSuccess ? '恭喜过关' : '闯关失败' }}</div>
-            <button
-              v-if="gameSuccess && currentLevel < totalLevels"
-              class="game-result-btn"
-              @click="continueGame"
-            >继续游戏</button>
-            <button
-              v-else
-              class="game-result-btn"
-              @click="restartGame"
-            >重新游戏</button>
+    </div>
+    
+    <!-- 游戏结束覆盖层 -->
+    <div v-if="gameOver" class="game-result">
+      <div class="result-image-container">
+        <div class="star-animate-bg">
+          <img class="star-bg" src="@/assets/images/bg.png" alt="bg" />
+          <div class="star-group" v-if="showStars">
+            <img class="star star1" :src="gameSuccess ? '/src/assets/icon/one-star.png' : '/src/assets/icon/empty.png'" />
+            <img class="star star2 star-middle" :src="gameSuccess ? '/src/assets/icon/one-star.png' : '/src/assets/icon/empty.png'" />
+            <img class="star star3" :src="gameSuccess ? '/src/assets/icon/one-star.png' : '/src/assets/icon/empty.png'" />
           </div>
+          <div class="success-text" :class="{ show: showSuccessText }">{{ gameSuccess ? '恭喜过关' : '闯关失败' }}</div>
+          <button
+            v-if="gameSuccess && currentLevel < totalLevels"
+            class="game-result-btn"
+            @click="continueGame"
+          >继续游戏</button>
+          <button
+            v-else
+            class="game-result-btn"
+            @click="restartGame"
+          >重新游戏</button>
         </div>
       </div>
     </div>
@@ -1506,17 +1507,17 @@ watch(gameOver, async (val) => {
 }
 
 .game-result {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  background-color: rgba(255, 255, 255, 0);
-  z-index: 10;
+  background-color: rgba(27, 24, 94, 0.8);
+  z-index: 1000;
 }
 
 .result-image-container {
