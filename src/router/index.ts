@@ -22,6 +22,12 @@ const routes: Array<RouteRecordRaw> = [
     ]
   },
   {
+    path: '/level-editor',
+    name: 'levelEditor',
+    component: () => import('../views/level-editor/index.vue'),
+    meta: { title: '关卡编辑器', hidden: true }
+  },
+  {
     path: '/404',
     name: '404',
     component: () => import('../views/error/404.vue'),
