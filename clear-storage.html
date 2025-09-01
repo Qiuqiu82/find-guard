@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>清理本地存储</title>
+</head>
+<body>
+    <h1>清理本地存储数据</h1>
+    <button onclick="clearStorage()">清理存储</button>
+    <p id="result"></p>
+    
+    <script>
+        function clearStorage() {
+            // 清理localStorage
+            localStorage.removeItem('game-data');
+            localStorage.removeItem('currentLevelData');
+            localStorage.clear();
+            
+            // 清理sessionStorage
+            sessionStorage.clear();
+            
+            document.getElementById('result').innerHTML = '存储已清理！请重新刷新页面。';
+            
+            // 2秒后自动关闭
+            setTimeout(() => {
+                window.close();
+            }, 2000);
+        }
+        
+        // 页面加载时自动清理
+        window.onload = function() {
+            setTimeout(clearStorage, 1000);
+        };
+    </script>
+</body>
+</html>

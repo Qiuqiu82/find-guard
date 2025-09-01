@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>标签页样式测试</title>
+    <style>
+        body {
+            font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+            background-color: #f5f7fa;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #1e1c72;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        
+        .tabs-container {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .el-tabs__nav {
+            display: flex;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            border-bottom: 1px solid #e8e8e8;
+        }
+        
+        .el-tabs__item {
+            padding: 12px 20px;
+            margin-right: 8px;
+            background-color: #f5f7fa;
+            border: 1px solid #e8e8e8;
+            border-bottom: none;
+            border-radius: 8px 8px 0 0;
+            color: #333;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .el-tabs__item:hover {
+            color: #1e1c72;
+            background-color: #f0f2f5;
+        }
+        
+        .el-tabs__item.is-active {
+            color: #1e1c72;
+            background-color: white;
+            border-bottom-color: white;
+            font-weight: 600;
+        }
+        
+        
+        
+        .el-tabs__content {
+            padding: 20px;
+            background-color: #fafafa;
+            border-radius: 0 0 8px 8px;
+            min-height: 200px;
+        }
+        
+        /* 暗色主题 */
+        body.dark-theme {
+            background-color: #141414;
+        }
+        
+        body.dark-theme .tabs-container {
+            background-color: #1f1f1f;
+        }
+        
+        body.dark-theme .el-tabs__nav {
+            border-bottom-color: #303030;
+        }
+        
+        body.dark-theme .el-tabs__item {
+            background-color: #2a2a2a;
+            border-color: #404040;
+            color: #e6e6e6;
+        }
+        
+        body.dark-theme .el-tabs__item:hover {
+            color: #fff;
+            background-color: #3a3a3a;
+        }
+        
+        body.dark-theme .el-tabs__item.is-active {
+            color: #fff;
+            background-color: #1e1c72;
+            border-color: #1e1c72;
+        }
+        
+        
+        
+        body.dark-theme .el-tabs__content {
+            background-color: #2a2a2a;
+            color: #e6e6e6;
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeToggle">🌙 切换到暗色主题</button>
+    
+    <div class="container">
+                 <h1>标签页样式演示（无关闭按钮）</h1>
+        
+        <div class="tabs-container">
+            <div class="el-tabs__nav">
+                                 <div class="el-tabs__item is-active" onclick="switchTab(this, 'game-settings')">
+                     <span>⚙️</span>
+                     <span>游戏设置</span>
+                 </div>
+                 <div class="el-tabs__item" onclick="switchTab(this, 'image-management')">
+                     <span>🖼️</span>
+                     <span>图片管理</span>
+                 </div>
+                 <div class="el-tabs__item" onclick="switchTab(this, 'data-management')">
+                     <span>📁</span>
+                     <span>数据管理</span>
+                 </div>
+            </div>
+            
+            <div class="el-tabs__content">
+                <div id="game-settings">
+                    <h3>游戏设置</h3>
+                    <p>这里是游戏设置页面的内容。</p>
+                </div>
+                
+                <div id="image-management" style="display: none;">
+                    <h3>图片管理</h3>
+                    <p>这里是图片管理页面的内容。</p>
+                </div>
+                
+                <div id="data-management" style="display: none;">
+                    <h3>数据管理</h3>
+                    <p>这里是数据管理页面的内容。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleTheme() {
+            const body = document.body;
+            const themeToggle = document.getElementById('themeToggle');
+            
+            if (body.classList.contains('dark-theme')) {
+                body.classList.remove('dark-theme');
+                themeToggle.textContent = '🌙 切换到暗色主题';
+            } else {
+                body.classList.add('dark-theme');
+                themeToggle.textContent = '☀️ 切换到亮色主题';
+            }
+        }
+
+        function switchTab(tabElement, tabId) {
+            document.querySelectorAll('.el-tabs__item').forEach(tab => {
+                tab.classList.remove('is-active');
+            });
+            
+            document.querySelectorAll('.el-tabs__content > div').forEach(content => {
+                content.style.display = 'none';
+            });
+            
+            tabElement.classList.add('is-active');
+            document.getElementById(tabId).style.display = 'block';
+        }
+
+        
+    </script>
+</body>
+</html> 

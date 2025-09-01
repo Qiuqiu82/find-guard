@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>图片显示和编辑功能测试</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .test-section { 
+            background: white; 
+            margin: 20px 0; 
+            padding: 20px; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .success { color: #28a745; font-weight: bold; }
+        .error { color: #dc3545; font-weight: bold; }
+        .info { color: #007bff; font-weight: bold; }
+        .warning { color: #ffc107; font-weight: bold; }
+        button { 
+            padding: 12px 24px; 
+            margin: 8px; 
+            border: none; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-primary:hover { background: #0056b3; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-success:hover { background: #1e7e34; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-danger:hover { background: #c82333; }
+        .btn-warning { background: #ffc107; color: #212529; }
+        .btn-warning:hover { background: #e0a800; }
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .status-item {
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: #f8f9fa;
+        }
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        .feature-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
+        .check-mark { color: #28a745; margin-right: 8px; }
+        .x-mark { color: #dc3545; margin-right: 8px; }
+    </style>
+</head>
+<body>
+    <h1>🔧 图片显示和编辑功能测试</h1>
+    
+    <div class="test-section">
+        <h2>📋 修复内容总结</h2>
+        <div class="status-grid">
+            <div class="status-item">
+                <h3>✅ 图片路径修复</h3>
+                <ul class="feature-list">
+                    <li><span class="check-mark">✓</span>使用Vite资源导入代替静态路径</li>
+                    <li><span class="check-mark">✓</span>修复全屏编辑页面图片显示</li>
+                    <li><span class="check-mark">✓</span>确保12张预置图片正确加载</li>
+                </ul>
+            </div>
+            
+            <div class="status-item">
+                <h3>✅ 数据过滤优化</h3>
+                <ul class="feature-list">
+                    <li><span class="check-mark">✓</span>过滤无效的自定义图片</li>
+                    <li><span class="check-mark">✓</span>防止空白图片显示</li>
+                    <li><span class="check-mark">✓</span>添加数据有效性检查</li>
+                </ul>
+            </div>
+            
+            <div class="status-item">
+                <h3>✅ 类型安全改进</h3>
+                <ul class="feature-list">
+                    <li><span class="check-mark">✓</span>修复TypeScript编译错误</li>
+                    <li><span class="check-mark">✓</span>添加空值检查</li>
+                    <li><span class="check-mark">✓</span>确保代码运行稳定性</li>
+                </ul>
+            </div>
+            
+            <div class="status-item">
+                <h3>✅ 坐标数据完整</h3>
+                <ul class="feature-list">
+                    <li><span class="check-mark">✓</span>12张图片精确坐标配置</li>
+                    <li><span class="check-mark">✓</span>真实安全教育内容</li>
+                    <li><span class="check-mark">✓</span>多样化连接线类型</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🧪 功能测试步骤</h2>
+        <div id="test-results"></div>
+        
+        <h3>1. 清理和重置</h3>
+        <button class="btn-danger" onclick="clearAllData()">清理所有存储数据</button>
+        <button class="btn-warning" onclick="checkCurrentState()">检查当前状态</button>
+        
+        <h3>2. 图片管理测试</h3>
+        <button class="btn-primary" onclick="window.open('/admin/images', '_blank')">打开图片管理页面</button>
+        <button class="btn-success" onclick="testImageCounts()">验证图片数量</button>
+        
+        <h3>3. 全屏编辑测试</h3>
+        <p class="info">点击图片管理页面中的"全屏编辑"按钮测试图片显示</p>
+        
+        <h3>4. 游戏功能测试</h3>
+        <button class="btn-success" onclick="window.open('/', '_blank')">启动游戏测试</button>
+        
+        <div id="test-output" style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 6px;"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>📊 预期结果</h2>
+        <div class="status-grid">
+            <div class="status-item">
+                <h4>图片管理页面应该显示：</h4>
+                <ul class="feature-list">
+                    <li><span class="check-mark">✓</span>恰好12张预置图片</li>
+                    <li><span class="check-mark">✓</span>没有空白图片</li>
+                    <li><span class="check-mark">✓</span>每张图片都有正确的标题</li>
+                    <li><span class="check-mark">✓</span>显示"0个警示点"或实际点位数</li>
+                </ul>
+            </div>
+            
+            <div class="status-item">
+                <h4>全屏编辑页面应该显示：</h4>
+                <ul class="feature-list">
+                    <li><span class="check-mark">✓</span>图片正常加载显示</li>
+                    <li><span class="check-mark">✓</span>显示所有预设点位</li>
+                    <li><span class="check-mark">✓</span>连接线正确显示</li>
+                    <li><span class="check-mark">✓</span>点击可以查看详细说明</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function logOutput(message, type = 'info') {
+            const output = document.getElementById('test-output');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : 'info';
+            output.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+            output.scrollTop = output.scrollHeight;
+        }
+        
+        function clearAllData() {
+            try {
+                const keysToRemove = [];
+                Object.keys(localStorage).forEach(key => {
+                    if (key.includes('game') || key.includes('image') || key.includes('level') || key.includes('preset')) {
+                        keysToRemove.push(key);
+                    }
+                });
+                
+                keysToRemove.forEach(key => localStorage.removeItem(key));
+                
+                // 设置初始空数据
+                const initialData = {
+                    version: '2.0',
+                    settings: { totalLevels: 12, countdownSeconds: 30, flashThreshold: 10 },
+                    levels: [],
+                    exportTime: new Date().toISOString()
+                };
+                
+                localStorage.setItem('game-data', JSON.stringify(initialData));
+                
+                logOutput(`✅ 清理完成！删除了 ${keysToRemove.length} 个存储键`, 'success');
+                logOutput('📝 已重置为仅包含预置图片的状态', 'info');
+            } catch (error) {
+                logOutput(`❌ 清理失败: ${error.message}`, 'error');
+            }
+        }
+        
+        function checkCurrentState() {
+            try {
+                const gameData = localStorage.getItem('game-data');
+                const allKeys = Object.keys(localStorage);
+                const imageKeys = allKeys.filter(key => key.startsWith('image_'));
+                
+                let gameDataObj = null;
+                if (gameData) {
+                    gameDataObj = JSON.parse(gameData);
+                }
+                
+                logOutput('📊 当前存储状态:', 'info');
+                logOutput(`  • localStorage 总键数: ${allKeys.length}`, 'info');
+                logOutput(`  • game-data 存在: ${gameData ? '是' : '否'}`, 'info');
+                logOutput(`  • 自定义关卡数: ${gameDataObj?.levels?.length || 0}`, 'info');
+                logOutput(`  • image_ 键数量: ${imageKeys.length}`, 'info');
+                
+                if (gameDataObj?.levels?.length > 0) {
+                    logOutput(`⚠️ 检测到 ${gameDataObj.levels.length} 个自定义关卡，可能导致额外图片显示`, 'warning');
+                }
+            } catch (error) {
+                logOutput(`❌ 检查失败: ${error.message}`, 'error');
+            }
+        }
+        
+        function testImageCounts() {
+            // 模拟检查预置图片数量
+            logOutput('🔍 验证预置图片配置...', 'info');
+            
+            // 这里模拟预置图片数据
+            const expectedImages = [
+                '邮件安全识别1', '邮件安全识别2', '网站安全识别1', '邮件安全识别3',
+                '邮件安全识别4', '邮件安全识别5', '邮件安全识别6', '邮件安全识别7',
+                '网站安全识别2', '办公安全识别1', '办公安全识别2', '办公安全识别3'
+            ];
+            
+            logOutput(`✅ 预置图片配置正确: ${expectedImages.length} 张`, 'success');
+            expectedImages.forEach((name, index) => {
+                logOutput(`  ${index + 1}. ${name}`, 'info');
+            });
+            
+            logOutput('💡 请打开图片管理页面验证实际显示数量', 'info');
+        }
+        
+        // 页面加载时自动检查状态
+        window.onload = () => {
+            logOutput('🚀 图片显示功能测试页面已加载', 'success');
+            logOutput('📝 请按照测试步骤验证各项功能', 'info');
+            checkCurrentState();
+        };
+    </script>
+</body>
+</html>

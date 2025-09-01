@@ -16,4 +16,7 @@ app.use(ElementPlus)
 app.use(router)
 app.use(store)
 
+// 初始化游戏数据
+store.dispatch('game/initGame')
+
 app.mount('#app')

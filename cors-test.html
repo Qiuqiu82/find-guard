@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CORS 跨域测试</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        button {
+            background: #409eff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #66b1ff;
+        }
+        button:disabled {
+            background: #c0c4cc;
+            cursor: not-allowed;
+        }
+        .success {
+            color: #67c23a;
+            background: #f0f9ff;
+            padding: 10px;
+            border-radius: 5px;
+            border-left: 4px solid #67c23a;
+        }
+        .error {
+            color: #f56c6c;
+            background: #fef0f0;
+            padding: 10px;
+            border-radius: 5px;
+            border-left: 4px solid #f56c6c;
+        }
+        .info {
+            color: #909399;
+            background: #f4f4f5;
+            padding: 10px;
+            border-radius: 5px;
+            border-left: 4px solid #909399;
+        }
+        .log {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status.pending { background: #f0f0f0; color: #666; }
+        .status.success { background: #f0f9ff; color: #67c23a; }
+        .status.error { background: #fef0f0; color: #f56c6c; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌐 CORS 跨域配置测试</h1>
+            <p>测试 axios 和 Vite 代理的跨域配置</p>
+        </div>
+
+        <div class="test-section">
+            <h3>📡 基础连接测试</h3>
+            <p>测试与后台 API 的基础连接</p>
+            <button onclick="testBasicConnection()">测试基础连接</button>
+            <div id="basic-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔄 代理测试</h3>
+            <p>测试 Vite 开发服务器代理配置</p>
+            <button onclick="testProxy()">测试代理配置</button>
+            <div id="proxy-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 API 接口测试</h3>
+            <p>测试主要 API 接口的跨域访问</p>
+            <button onclick="testAPIEndpoints()">测试 API 接口</button>
+            <div id="api-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🧪 完整测试套件</h3>
+            <p>运行完整的 API 测试套件</p>
+            <button onclick="runFullTest()">运行完整测试</button>
+            <div id="full-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📝 测试日志</h3>
+            <button onclick="clearLog()">清空日志</button>
+            <div id="test-log" class="log"></div>
+        </div>
+    </div>
+
+    <script>
+        // 日志输出函数
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('test-log')
+            const timestamp = new Date().toLocaleTimeString()
+            const logEntry = `[${timestamp}] ${message}\n`
+            logDiv.textContent += logEntry
+            logDiv.scrollTop = logDiv.scrollHeight
+            
+            console.log(message)
+        }
+
+        function clearLog() {
+            document.getElementById('test-log').textContent = ''
+        }
+
+        function showResult(elementId, message, type) {
+            const element = document.getElementById(elementId)
+            element.innerHTML = `<div class="${type}">${message}</div>`
+        }
+
+        function showStatus(elementId, status) {
+            const element = document.getElementById(elementId)
+            element.innerHTML = `<span class="status ${status}">${status.toUpperCase()}</span>`
+        }
+
+        // 1. 基础连接测试
+        async function testBasicConnection() {
+            showStatus('basic-result', 'pending')
+            log('🔍 开始基础连接测试...')
+            
+            try {
+                // 测试直接访问后台
+                const response = await fetch('http://localhost:4000/api/test', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-API-Key': 'findguard-api-key-2024'
+                    }
+                })
+                
+                if (response.ok) {
+                    const data = await response.json()
+                    log('✅ 直接访问后台成功')
+                    showResult('basic-result', '✅ 基础连接正常，后台服务可访问', 'success')
+                } else {
+                    throw new Error(`HTTP ${response.status}`)
+                }
+            } catch (error) {
+                log(`❌ 基础连接失败: ${error.message}`)
+                if (error.message.includes('CORS')) {
+                    showResult('basic-result', '⚠️ 检测到 CORS 问题，这是正常的，代理配置将解决此问题', 'info')
+                } else {
+                    showResult('basic-result', `❌ 连接失败: ${error.message}`, 'error')
+                }
+            }
+        }
+
+        // 2. 代理测试
+        async function testProxy() {
+            showStatus('proxy-result', 'pending')
+            log('🔍 开始代理配置测试...')
+            
+            try {
+                // 测试通过代理访问
+                const response = await fetch('/api/test', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-API-Key': 'findguard-api-key-2024'
+                    }
+                })
+                
+                if (response.ok) {
+                    const data = await response.json()
+                    log('✅ 代理访问成功')
+                    log(`📊 响应数据: ${JSON.stringify(data, null, 2)}`)
+                    showResult('proxy-result', '✅ Vite 代理配置正常，跨域问题已解决', 'success')
+                } else {
+                    throw new Error(`HTTP ${response.status}`)
+                }
+            } catch (error) {
+                log(`❌ 代理测试失败: ${error.message}`)
+                showResult('proxy-result', `❌ 代理配置有问题: ${error.message}`, 'error')
+            }
+        }
+
+        // 3. API 接口测试
+        async function testAPIEndpoints() {
+            showStatus('api-result', 'pending')
+            log('🔍 开始 API 接口测试...')
+            
+            const endpoints = [
+                { url: '/api/test', name: '连接测试' },
+                { url: '/api/system/stats', name: '系统统计' },
+                { url: '/api/levels?page=1&limit=5', name: '关卡列表' },
+                { url: '/api/categories', name: '分类列表' }
+            ]
+            
+            let successCount = 0
+            
+            for (const endpoint of endpoints) {
+                try {
+                    log(`📡 测试接口: ${endpoint.name} (${endpoint.url})`)
+                    
+                    const response = await fetch(endpoint.url, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-API-Key': 'findguard-api-key-2024'
+                        }
+                    })
+                    
+                    if (response.ok) {
+                        const data = await response.json()
+                        log(`✅ ${endpoint.name} - 成功`)
+                        successCount++
+                    } else {
+                        log(`❌ ${endpoint.name} - HTTP ${response.status}`)
+                    }
+                } catch (error) {
+                    log(`❌ ${endpoint.name} - ${error.message}`)
+                }
+            }
+            
+            const totalCount = endpoints.length
+            const successRate = Math.round((successCount / totalCount) * 100)
+            
+            if (successCount === totalCount) {
+                showResult('api-result', `✅ 所有接口测试通过 (${successCount}/${totalCount})`, 'success')
+            } else if (successCount > 0) {
+                showResult('api-result', `⚠️ 部分接口正常 (${successCount}/${totalCount}, ${successRate}%)`, 'info')
+            } else {
+                showResult('api-result', `❌ 所有接口测试失败`, 'error')
+            }
+        }
+
+        // 4. 运行完整测试
+        async function runFullTest() {
+            showStatus('full-result', 'pending')
+            log('🚀 开始完整测试套件...')
+            log('='.repeat(50))
+            
+            try {
+                // 按顺序运行所有测试
+                await testBasicConnection()
+                await new Promise(resolve => setTimeout(resolve, 1000))
+                
+                await testProxy()
+                await new Promise(resolve => setTimeout(resolve, 1000))
+                
+                await testAPIEndpoints()
+                
+                log('='.repeat(50))
+                log('🎉 完整测试套件执行完成!')
+                showResult('full-result', '✅ 完整测试套件执行完成，请查看各项测试结果', 'success')
+                
+            } catch (error) {
+                log(`❌ 测试套件执行失败: ${error.message}`)
+                showResult('full-result', `❌ 测试套件执行失败: ${error.message}`, 'error')
+            }
+        }
+
+        // 页面加载完成后的初始化
+        window.addEventListener('load', () => {
+            log('📄 CORS 测试页面加载完成')
+            log('💡 提示: 请确保后台服务运行在 http://localhost:4000')
+            log('💡 提示: 请确保前端开发服务器运行在 http://localhost:8000')
+            log('🔧 当前页面地址: ' + window.location.href)
+        })
+    </script>
+</body>
+</html>

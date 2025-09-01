@@ -12,6 +12,20 @@ export default defineConfig({
     }
   },
   server: {
-    port: 8000
+    port: 8000,
+    // 配置代理解决跨域问题
+    proxy: {
+      '/api': {
+        target: 'http://localhost:4000',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api/, '/api')
+      }
+    }
+  },
+  // 添加类型声明
+  define: {
+    __VUE_OPTIONS_API__: true,
+    __VUE_PROD_DEVTOOLS__: false
   }
 })

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>测试图片加载</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .image-test { margin: 20px 0; }
+        .image-test img { max-width: 200px; max-height: 150px; margin: 10px; border: 1px solid #ccc; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>图片加载测试</h1>
+    <div id="results"></div>
+    
+    <script>
+        const images = [
+            'office12.jpg', 'office13.jpg', 'office14.jpg',
+            'p1.jpg', 'p2.jpg', 'p3.jpg', 'p4.jpg', 'p5.jpg', 'p6.jpg', 'p7.jpg', 'p8.jpg', 'p9.jpg'
+        ];
+        
+        const resultsDiv = document.getElementById('results');
+        
+        images.forEach(imageName => {
+            const div = document.createElement('div');
+            div.className = 'image-test';
+            
+            const title = document.createElement('h3');
+            title.textContent = imageName;
+            div.appendChild(title);
+            
+            const img = document.createElement('img');
+            img.src = `/src/assets/images/pic/${imageName}`;
+            img.alt = imageName;
+            
+            const status = document.createElement('p');
+            
+            img.onload = () => {
+                status.textContent = '✅ 加载成功';
+                status.className = 'success';
+            };
+            
+            img.onerror = () => {
+                status.textContent = '❌ 加载失败';
+                status.className = 'error';
+            };
+            
+            div.appendChild(img);
+            div.appendChild(status);
+            resultsDiv.appendChild(div);
+        });
+        
+        // 测试本地存储
+        setTimeout(() => {
+            const gameData = localStorage.getItem('game-data');
+            const storageDiv = document.createElement('div');
+            storageDiv.innerHTML = `
+                <h2>本地存储状态</h2>
+                <p>游戏数据: ${gameData ? '✅ 存在' : '❌ 不存在'}</p>
+                <details>
+                    <summary>查看数据</summary>
+                    <pre>${gameData ? JSON.stringify(JSON.parse(gameData), null, 2) : '无数据'}</pre>
+                </details>
+            `;
+            resultsDiv.appendChild(storageDiv);
+        }, 1000);
+    </script>
+</body>
+</html>

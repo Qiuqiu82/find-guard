@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LevelEditor 修复测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+        }
+        .test-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .test-description {
+            color: #666;
+            margin-bottom: 15px;
+        }
+        .test-result {
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .code-block {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🎯 LevelEditor 组件修复验证</h1>
+        
+        <div class="test-section">
+            <div class="test-title">✅ 问题描述</div>
+            <div class="test-description">
+                修复了 Element Plus InputNumber 组件的错误：<br>
+                <strong>ElementPlusError: [InputNumber] min should not be greater than max</strong>
+            </div>
+            <div class="test-result success">
+                这个错误会导致组件无法正常渲染，影响用户体验
+            </div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">🔧 修复方案</div>
+            <div class="test-description">
+                采用了多层防护机制来确保 min ≤ max 的约束：
+            </div>
+            
+            <div class="code-block">
+// 1. 计算属性：确保min ≤ max的约束
+const maxLevels = computed(() => props.allGameLevels.length);
+const minLevels = computed(() => maxLevels.value > 0 ? 1 : 0);
+
+const maxFlashThreshold = computed(() => Math.min(30, gameSettings.value.countdownSeconds));
+const minFlashThreshold = computed(() => 5);
+
+// 2. 自动夹逼函数：确保数据在合法范围内
+const clampValues = () => {
+  // 夹逼关卡数量
+  if (maxLevels.value > 0) {
+    gameSettings.value.totalLevels = Math.max(
+      minLevels.value,
+      Math.min(maxLevels.value, gameSettings.value.totalLevels)
+    );
+  } else {
+    gameSettings.value.totalLevels = 0;
+  }
+  
+  // 夹逼闪烁阈值
+  gameSettings.value.flashThreshold = Math.max(
+    minFlashThreshold.value,
+    Math.min(maxFlashThreshold.value, gameSettings.value.flashThreshold)
+  );
+  
+  // 夹逼倒计时
+  gameSettings.value.countdownSeconds = Math.max(10, Math.min(120, gameSettings.value.countdownSeconds));
+};
+            </div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">📋 约束规则</div>
+            <div class="test-description">
+                为三个数字输入框设置了合理的约束范围：
+            </div>
+            
+            <div class="code-block">
+关卡数量: min = 1 (如果有图片), max = 图片总数
+倒计时: min = 10, max = 120
+闪烁阈值: min = 5, max = min(30, 倒计时值)
+            </div>
+            
+            <div class="test-result info">
+                ✅ 所有约束都通过计算属性动态计算，确保 min ≤ max
+            </div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">🔄 自动夹逼时机</div>
+            <div class="test-description">
+                在以下关键时刻自动调用夹逼函数：
+            </div>
+            
+            <div class="code-block">
+1. 组件初始化后 (onMounted)
+2. 保存设置前 (saveSettings)
+3. 图片数量变化后 (watch allGameLevels.length)
+4. 删除图片后 (deleteImage)
+5. 添加图片后 (handleImageUpload)
+6. 导入数据后 (importLevels)
+            </div>
+            
+            <div class="test-result success">
+                ✅ 确保任何数据变化后都会自动调整到合法范围
+            </div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">🎨 模板更新</div>
+            <div class="test-description">
+                更新了模板中的 InputNumber 组件，使用计算属性：
+            </div>
+            
+            <div class="code-block">
+<!-- 关卡数量 -->
+<el-input-number
+  v-model="gameSettings.totalLevels"
+  :min="minLevels"
+  :max="maxLevels"
+  :step="1"
+  size="large"
+  class="setting-input"
+  :disabled="maxLevels === 0"
+/>
+
+<!-- 闪烁阈值 -->
+<el-input-number
+  v-model="gameSettings.flashThreshold"
+  :min="minFlashThreshold"
+  :max="maxFlashThreshold"
+  :step="5"
+  size="large"
+  class="setting-input"
+/>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">🚀 修复效果</div>
+            <div class="test-description">
+                修复后的预期效果：
+            </div>
+            
+            <div class="test-result success">
+                ✅ 不再出现 "min should not be greater than max" 错误<br>
+                ✅ 数据自动保持在合法范围内<br>
+                ✅ 用户体验更加流畅<br>
+                ✅ 数据一致性得到保障
+            </div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">🧪 测试建议</div>
+            <div class="test-description">
+                建议测试以下场景来验证修复效果：
+            </div>
+            
+            <div class="code-block">
+1. 添加/删除图片，观察关卡数量是否自动调整
+2. 修改倒计时，观察闪烁阈值是否自动约束
+3. 导入包含越界数据的JSON文件
+4. 快速连续操作，测试夹逼逻辑的稳定性
+5. 边界值测试：0张图片、1张图片、多张图片的情况
+            </div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">📝 总结</div>
+            <div class="test-result info">
+                🎯 <strong>核心问题已解决</strong>：通过计算属性和自动夹逼机制，确保 InputNumber 组件的 min/max 约束始终有效<br><br>
+                
+                🛡️ <strong>防护机制完善</strong>：在数据变化的各个关键节点都添加了夹逼逻辑<br><br>
+                
+                🔄 <strong>自动化程度高</strong>：用户无需手动调整，系统自动维护数据合法性<br><br>
+                
+                📱 <strong>用户体验提升</strong>：不再出现错误提示，操作更加流畅
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

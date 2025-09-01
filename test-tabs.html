@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>标签页功能测试</title>
+    <style>
+        body {
+            font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+            background-color: #f5f7fa;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .demo-section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .tabs-demo {
+            border: 1px solid #e8e8e8;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .tabs-header {
+            background: #fafafa;
+            border-bottom: 1px solid #e8e8e8;
+            padding: 0;
+            margin: 0;
+            list-style: none;
+            display: flex;
+        }
+        
+        .tab-item {
+            padding: 12px 20px;
+            border-right: 1px solid #e8e8e8;
+            cursor: pointer;
+            position: relative;
+            background: white;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .tab-item:hover {
+            background: #f5f5f5;
+        }
+        
+        .tab-item.active {
+            background: #1e1c72;
+            color: white;
+        }
+        
+        .tab-item.affix {
+            background: #f0f0f0;
+            color: #666;
+        }
+        
+        .tab-item.affix.active {
+            background: #1e1c72;
+            color: white;
+        }
+        
+        .tab-close {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #ccc;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .tab-close:hover {
+            background: #ff4757;
+        }
+        
+        .tab-item.affix .tab-close {
+            display: none;
+        }
+        
+        .tabs-content {
+            padding: 24px;
+            min-height: 200px;
+            background: white;
+        }
+        
+        .sidebar-demo {
+            display: flex;
+            gap: 30px;
+        }
+        
+        .sidebar {
+            width: 200px;
+            background: #001529;
+            border-radius: 8px;
+            padding: 16px;
+        }
+        
+        .sidebar-item {
+            color: white;
+            padding: 12px 16px;
+            margin: 4px 0;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .sidebar-item.active {
+            background: rgba(255, 255, 255, 0.2);
+            border-right: 3px solid #1e1c72;
+        }
+        
+        .content-area {
+            flex: 1;
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            border: 1px solid #e8e8e8;
+        }
+        
+        .feature-list {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .feature-list h4 {
+            margin-top: 0;
+            color: #1e1c72;
+        }
+        
+        .feature-list ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        .feature-list li {
+            margin: 8px 0;
+            color: #666;
+        }
+        
+        .status-info {
+            background: #e8f5e8;
+            border: 1px solid #4caf50;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 20px;
+        }
+        
+        .status-info h4 {
+            margin: 0 0 12px 0;
+            color: #2e7d32;
+        }
+        
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #e8f5e8;
+        }
+        
+        .status-item:last-child {
+            border-bottom: none;
+        }
+        
+        .status-value {
+            font-weight: 600;
+            color: #2e7d32;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>标签页功能测试</h1>
+        
+        <div class="demo-section">
+            <h2>标签页功能演示</h2>
+            <p>演示标签页的关闭功能、固定标签页和导航联动</p>
+            
+            <div class="tabs-demo">
+                <div class="tabs-header" id="tabsHeader">
+                    <!-- 标签页将通过JavaScript动态生成 -->
+                </div>
+                <div class="tabs-content" id="tabsContent">
+                    <p>点击标签页或侧边栏来切换内容</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="demo-section">
+            <h2>导航联动演示</h2>
+            <p>左侧侧边栏和顶部标签页的双向联动</p>
+            
+            <div class="sidebar-demo">
+                <div class="sidebar">
+                    <div class="sidebar-item active" data-path="/admin/settings">
+                        ⚙️ 游戏设置
+                    </div>
+                    <div class="sidebar-item" data-path="/admin/images">
+                        🖼️ 图片管理
+                    </div>
+                    <div class="sidebar-item" data-path="/admin/data">
+                        📁 数据管理
+                    </div>
+                    <div class="sidebar-item" data-path="/admin/about">
+                        ℹ️ 关于
+                    </div>
+                </div>
+                
+                <div class="content-area" id="contentArea">
+                    <h3>游戏设置</h3>
+                    <p>这是游戏设置页面的内容。点击其他侧边栏项目或标签页来测试导航联动。</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="demo-section">
+            <h2>功能特性说明</h2>
+            <div class="feature-list">
+                <h4>✅ 已实现的功能</h4>
+                <ul>
+                    <li><strong>固定标签页</strong>：游戏设置标签页不可关闭（affix: true）</li>
+                    <li><strong>可关闭标签页</strong>：其他标签页都有关闭按钮（小叉）</li>
+                    <li><strong>导航联动</strong>：点击侧边栏自动打开对应标签页</li>
+                    <li><strong>标签页切换</strong>：点击标签页自动激活对应侧边栏项目</li>
+                    <li><strong>智能关闭</strong>：关闭标签页时自动跳转到其他可用标签页</li>
+                    <li><strong>状态保持</strong>：关闭标签页后，再次点击侧边栏会重新打开</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="demo-section">
+            <h2>当前状态</h2>
+            <div class="status-info">
+                <h4>实时状态监控</h4>
+                <div class="status-item">
+                    <span>当前激活标签页：</span>
+                    <span class="status-value" id="currentTab">/admin/settings</span>
+                </div>
+                <div class="status-item">
+                    <span>当前激活侧边栏：</span>
+                    <span class="status-value" id="currentSidebar">游戏设置</span>
+                </div>
+                <div class="status-item">
+                    <span>已打开标签页数量：</span>
+                    <span class="status-value" id="openTabsCount">4</span>
+                </div>
+                <div class="status-item">
+                    <span>固定标签页：</span>
+                    <span class="status-value">游戏设置</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 模拟路由数据
+        const routes = [
+            { path: '/admin/settings', title: '游戏设置', affix: true, icon: '⚙️' },
+            { path: '/admin/images', title: '图片管理', affix: false, icon: '🖼️' },
+            { path: '/admin/data', title: '数据管理', affix: false, icon: '📁' },
+            { path: '/admin/about', title: '关于', affix: false, icon: 'ℹ️' }
+        ];
+        
+        // 页面内容
+        const pageContents = {
+            '/admin/settings': {
+                title: '游戏设置',
+                content: `
+                    <h3>⚙️ 游戏设置</h3>
+                    <p>这是游戏设置页面的内容。您可以在这里配置游戏的各种参数。</p>
+                    <ul>
+                        <li>关卡配置</li>
+                        <li>倒计时设置</li>
+                        <li>游戏规则</li>
+                        <li>难度调整</li>
+                    </ul>
+                `
+            },
+            '/admin/images': {
+                title: '图片管理',
+                content: `
+                    <h3>🖼️ 图片管理</h3>
+                    <p>这是图片管理页面的内容。您可以在这里管理游戏中的各种图片资源。</p>
+                    <ul>
+                        <li>上传图片</li>
+                        <li>图片编辑</li>
+                        <li>图片分类</li>
+                        <li>批量操作</li>
+                    </ul>
+                `
+            },
+            '/admin/data': {
+                title: '数据管理',
+                content: `
+                    <h3>📁 数据管理</h3>
+                    <p>这是数据管理页面的内容。您可以在这里管理游戏的各种数据。</p>
+                    <ul>
+                        <li>数据导入</li>
+                        <li>数据导出</li>
+                        <li>数据备份</li>
+                        <li>数据恢复</li>
+                    </ul>
+                `
+            },
+            '/admin/about': {
+                title: '关于',
+                content: `
+                    <h3>ℹ️ 关于</h3>
+                    <p>这是关于页面的内容。您可以在这里了解系统的相关信息。</p>
+                    <ul>
+                        <li>系统版本</li>
+                        <li>更新日志</li>
+                        <li>技术支持</li>
+                        <li>联系方式</li>
+                    </ul>
+                `
+            }
+        };
+        
+        let currentPath = '/admin/settings';
+        let openedTabs = ['/admin/settings']; // 初始只有游戏设置标签页
+        
+        // 初始化标签页
+        function initTabs() {
+            const tabsHeader = document.getElementById('tabsHeader');
+            tabsHeader.innerHTML = '';
+            
+            // 先添加固定标签页
+            const affixTabs = routes.filter(route => route.affix);
+            affixTabs.forEach(route => {
+                if (!openedTabs.includes(route.path)) {
+                    openedTabs.push(route.path);
+                }
+            });
+            
+            // 生成所有标签页
+            openedTabs.forEach(path => {
+                const route = routes.find(r => r.path === path);
+                if (route) {
+                    const tabItem = document.createElement('div');
+                    tabItem.className = `tab-item ${path === currentPath ? 'active' : ''} ${route.affix ? 'affix' : ''}`;
+                    tabItem.setAttribute('data-path', path);
+                    
+                    const tabContent = `
+                        <span>${route.icon} ${route.title}</span>
+                        ${!route.affix ? '<span class="tab-close" onclick="closeTab(\'' + path + '\')">×</span>' : ''}
+                    `;
+                    
+                    tabItem.innerHTML = tabContent;
+                    tabItem.onclick = () => switchTab(path);
+                    tabsHeader.appendChild(tabItem);
+                }
+            });
+            
+            updateStatus();
+        }
+        
+        // 切换标签页
+        function switchTab(path) {
+            currentPath = path;
+            
+            // 更新标签页状态
+            document.querySelectorAll('.tab-item').forEach(tab => {
+                tab.classList.remove('active');
+                if (tab.getAttribute('data-path') === path) {
+                    tab.classList.add('active');
+                }
+            });
+            
+            // 更新侧边栏状态
+            document.querySelectorAll('.sidebar-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.getAttribute('data-path') === path) {
+                    item.classList.add('active');
+                }
+            });
+            
+            // 更新内容
+            updateContent(path);
+            updateStatus();
+        }
+        
+        // 关闭标签页
+        function closeTab(path) {
+            const route = routes.find(r => r.path === path);
+            if (route && route.affix) {
+                return; // 固定标签页不能关闭
+            }
+            
+            // 从已打开标签页中移除
+            const index = openedTabs.indexOf(path);
+            if (index > -1) {
+                openedTabs.splice(index, 1);
+            }
+            
+            // 如果关闭的是当前标签页，则跳转到其他标签页
+            if (currentPath === path) {
+                const remainingTabs = openedTabs.filter(tabPath => tabPath !== path);
+                if (remainingTabs.length > 0) {
+                    // 优先跳转到固定标签页
+                    const affixTab = remainingTabs.find(tabPath => {
+                        const r = routes.find(route => route.path === tabPath);
+                        return r && r.affix;
+                    });
+                    const nextTab = affixTab || remainingTabs[0];
+                    switchTab(nextTab);
+                }
+            }
+            
+            // 重新渲染标签页
+            initTabs();
+        }
+        
+        // 更新内容
+        function updateContent(path) {
+            const contentArea = document.getElementById('contentArea');
+            const pageContent = pageContents[path];
+            
+            if (pageContent) {
+                contentArea.innerHTML = pageContent.content;
+            }
+        }
+        
+        // 更新状态显示
+        function updateStatus() {
+            document.getElementById('currentTab').textContent = currentPath;
+            document.getElementById('currentSidebar').textContent = pageContents[currentPath]?.title || '未知';
+            document.getElementById('openTabsCount').textContent = openedTabs.length;
+        }
+        
+        // 侧边栏点击事件
+        document.querySelectorAll('.sidebar-item').forEach(item => {
+            item.onclick = () => {
+                const path = item.getAttribute('data-path');
+                
+                // 如果标签页不存在，则添加到已打开标签页
+                if (!openedTabs.includes(path)) {
+                    openedTabs.push(path);
+                }
+                
+                // 切换到对应标签页
+                switchTab(path);
+                
+                // 重新渲染标签页
+                initTabs();
+            };
+        });
+        
+        // 初始化
+        initTabs();
+        updateContent(currentPath);
+        
+        // 添加新标签页的演示
+        function addNewTab() {
+            const newPath = '/admin/new';
+            if (!openedTabs.includes(newPath)) {
+                openedTabs.push(newPath);
+                routes.push({
+                    path: newPath,
+                    title: '新页面',
+                    affix: false,
+                    icon: '🆕'
+                });
+                pageContents[newPath] = {
+                    title: '新页面',
+                    content: `
+                        <h3>🆕 新页面</h3>
+                        <p>这是一个新添加的页面，您可以关闭它。</p>
+                        <p>这个标签页演示了动态添加标签页的功能。</p>
+                    `
+                };
+                initTabs();
+                switchTab(newPath);
+            }
+        }
+        
+        // 添加演示按钮
+        const demoButton = document.createElement('button');
+        demoButton.textContent = '🆕 添加新标签页';
+        demoButton.style.cssText = `
+            background: #1e1c72;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+        `;
+        demoButton.onclick = addNewTab;
+        
+        document.querySelector('.tabs-content').appendChild(demoButton);
+    </script>
+</body>
+</html> 

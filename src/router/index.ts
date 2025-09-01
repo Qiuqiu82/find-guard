@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
+import { adminRoutes } from './admin'
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -10,7 +11,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/game',
     name: 'layout',
-    component: () => import('../layout/index.vue'),
+    component: () => import('@/layouts/index.vue'),
     redirect: '/home',
     children: [
       {
@@ -21,12 +22,15 @@ const routes: Array<RouteRecordRaw> = [
       }
     ]
   },
-  {
-    path: '/level-editor',
-    name: 'levelEditor',
-    component: () => import('../views/level-editor/index.vue'),
-    meta: { title: '关卡编辑器', hidden: true }
-  },
+  // 旧的路由已移除，现在使用新的管理系统路由
+  // {
+  //   path: '/level-editor',
+  //   name: 'levelEditor',
+  //   component: () => import('../views/level-editor/index.vue'),
+  //   meta: { title: '关卡编辑器', hidden: true }
+  // },
+  // 后台管理路由
+  ...adminRoutes,
   {
     path: '/404',
     name: '404',

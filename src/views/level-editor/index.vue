@@ -150,7 +150,8 @@
                   <label>连接线类型:</label>
                   <select v-model="editingPoint.connectionType" class="form-select">
                     <option value="horizontal">横线</option>
-                    <option value="vertical-horizontal">先竖后横</option>
+                    <option value="vertical-horizontal">L型（先竖后横）</option>
+                    <option value="none">无连接线</option>
                   </select>
                 </div>
                 <div class="form-actions">
@@ -229,7 +230,7 @@ interface PuzzlePoint {
   found: boolean;
   highlightTitle: string;
   highlightDetail: string;
-  connectionType?: 'horizontal' | 'vertical-horizontal';
+  connectionType?: 'horizontal' | 'vertical-horizontal' | 'none';
 }
 
 // 定义关卡类型
@@ -973,6 +974,85 @@ const saveSettings = () => {
   text-shadow: 1px 1px 2px white;
 }
 
+/* 高亮区域样式 - 与游戏界面保持一致 */
+.highlight-area {
+  position: absolute;
+  background-color: rgba(249, 239, 240, 0.4); /* 浅粉色背景带更高透明度 */
+  border: 2.5px solid #1a175d; /* 加粗的深蓝色边框 */
+  border-radius: 30px; /* 圆弧矩形 */
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+  box-shadow: 0 0 8px rgba(26, 23, 93, 0.5); /* 添加阴影效果增强可见性 */
+}
+
+/* 高亮区域标题和详情的容器 */
+.highlight-container {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; /* 改为左对齐 */
+  z-index: 6;
+  max-width: 90%; /* 确保不超出图片宽度 */
+}
+
+/* 高亮区域标题样式 */
+.highlight-title {
+  position: absolute;
+  background-color: #ff454d; /* 红色背景 */
+  color: white;
+  padding: 8px 15px;
+  border-radius: 30px; /* 大圆角 */
+  border: 2px solid #1a175d; /* 深蓝色边框 */
+  font-weight: bold;
+  font-size: 14px;
+  white-space: nowrap;
+  z-index: 8;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  margin-left: -20px; /* 向左偏移，让标题在详情的左侧 */
+  top: 0; /* 位于顶部 */
+  left: 0; /* 从左侧开始 */
+  display: inline-block; /* 确保内容宽度符合内容 */
+}
+
+/* 高亮区域详细说明样式 */
+.highlight-detail {
+  position: absolute;
+  background-color: white; /* 白色背景 */
+  color: #1a175d; /* 深蓝色文字 */
+  padding: 10px 15px;
+  padding-top: 15px; /* 增加顶部内边距，为标题重叠留出空间 */
+  padding-left: 25px; /* 增加左侧内边距，为标题留出空间 */
+  border-radius: 14px; /* 较小圆角 */
+  border: 2px solid #1a175d; /* 深蓝色边框 */
+  font-size: 14px;
+  width: max-content;
+  text-align: left;
+  z-index: 7;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  top: 20px; /* 位于标题下方 */
+  left: 20px; /* 从左侧开始，但比标题靠右 */
+}
+
+/* 当高亮区域在左侧显示时的样式 */
+.highlight-container[data-position="left"] .highlight-title {
+  position: absolute;
+  left: auto; /* 取消左侧定位 */
+  right: 0; /* 从右侧开始 */
+  margin-left: 0; /* 取消左侧偏移 */
+  margin-right: -20px; /* 向右偏移 */
+}
+
+.highlight-container[data-position="left"] .highlight-detail {
+  position: absolute;
+  left: auto; /* 取消左侧定位 */
+  right: 20px; /* 从右侧开始，但比标题靠左 */
+  padding-left: 15px; /* 恢复正常左侧内边距 */
+  padding-right: 25px; /* 增加右侧内边距，为标题留出空间 */
+}
+
+/* 连接线样式 - 与游戏界面保持一致 */
 .connection-line {
   position: absolute;
   pointer-events: none;
@@ -981,20 +1061,20 @@ const saveSettings = () => {
 
 .line-segment {
   position: absolute;
-  background-color: #1e1c72;
-  box-shadow: 0 0 4px rgba(30, 28, 114, 0.3);
+  background-color: #1a175d; /* 与游戏界面保持一致的颜色 */
+  box-shadow: 0 0 4px rgba(26, 23, 93, 0.3);
 }
 
 .line-segment.horizontal {
-  width: 120px;
-  height: 3px;
+  width: 80px; /* 与游戏界面保持一致 */
+  height: 2.5px; /* 与游戏界面保持一致 */
   top: 50%;
-  right: -120px;
+  right: -80px;
   transform: translateY(-50%);
 }
 
 .line-segment.vertical {
-  width: 3px;
+  width: 2.5px; /* 与游戏界面保持一致 */
   height: 80px;
   left: 50%;
   top: -80px;
@@ -1003,12 +1083,16 @@ const saveSettings = () => {
 
 .connection-line.vertical-horizontal .line-segment.horizontal {
   top: -80px;
-  right: -120px;
+  right: -100px; /* 与游戏界面保持一致 */
+  width: 100px; /* 与游戏界面保持一致 */
+  height: 2.5px; /* 与游戏界面保持一致 */
 }
 
 .connection-line.vertical-horizontal .line-segment.vertical {
   top: -80px;
   left: 50%;
+  width: 2.5px; /* 与游戏界面保持一致 */
+  height: 100px; /* 与游戏界面保持一致 */
 }
 
 .drawing-hint {
@@ -1386,14 +1470,14 @@ const saveSettings = () => {
 
 .preview-line-segment.horizontal {
   width: 100px;
-  height: 3px;
+  height: 2.5px; /* 与游戏界面保持一致 */
   top: 50%;
   right: -100px;
   transform: translateY(-50%);
 }
 
 .preview-line-segment.vertical {
-  width: 3px;
+  width: 2.5px; /* 与游戏界面保持一致 */
   height: 100px;
   left: 50%;
   top: -100px;
@@ -1408,5 +1492,34 @@ const saveSettings = () => {
 .preview-connection-line.vertical-horizontal .preview-line-segment.vertical {
   top: -100px;
   left: 50%;
+}
+
+/* 移动端适配样式 - 与游戏界面保持一致 */
+@media (max-width: 768px) {
+  /* 移动端上的高亮区域样式 */
+  .highlight-container {
+    max-width: 95%;
+  }
+  
+  .highlight-title {
+    font-size: 12px;
+    padding: 6px 12px;
+    margin-left: -15px;
+  }
+  
+  .highlight-detail {
+    font-size: 12px;
+    padding-left: 15px;
+  }
+  
+  /* 移动端上的连接线 */
+  .line-segment.horizontal {
+    width: 40px !important; /* 与游戏界面保持一致 */
+  }
+  
+  /* 移动端上的左侧连接线 */
+  .connection-line.vertical-horizontal .line-segment.horizontal {
+    width: 40px !important; /* 移动端保持原有尺寸，确保视觉效果清晰 */
+  }
 }
 </style> 

@@ -162,12 +162,15 @@
                     <el-input-number
                       v-model="gameSettings.totalLevels"
                       :min="1"
-                      :max="allGameLevels.length"
+                      :max="maxLevels || 50"
                       :step="1"
                       size="large"
                       class="setting-input"
+                      :disabled="maxLevels === 0"
                     />
-                    <div class="setting-hint">最大可设置: {{ allGameLevels.length }} 关</div>
+                    <div class="setting-hint">
+                      {{ maxLevels > 0 ? `设置范围: 1-${maxLevels} 关（当前可用图片: ${maxLevels} 张）` : '请先添加图片' }}
+                    </div>
                   </div>
                 </div>
               </el-card>
@@ -186,12 +189,12 @@
                     <el-input-number
                       v-model="gameSettings.countdownSeconds"
                       :min="10"
-                      :max="120"
+                      :max="300"
                       :step="5"
                       size="large"
                       class="setting-input"
                     />
-                    <div class="setting-hint">每关的倒计时秒数</div>
+                    <div class="setting-hint">每关的倒计时秒数（10-300秒）</div>
                   </div>
                   
                   <div class="setting-item">
@@ -199,12 +202,14 @@
                     <el-input-number
                       v-model="gameSettings.flashThreshold"
                       :min="5"
-                      :max="30"
+                      :max="Math.min(60, gameSettings.countdownSeconds - 5)"
                       :step="5"
                       size="large"
                       class="setting-input"
                     />
-                    <div class="setting-hint">剩余多少秒时开始闪烁红光</div>
+                    <div class="setting-hint">
+                      剩余多少秒时开始闪烁红光（5-{{ Math.min(60, gameSettings.countdownSeconds - 5) }}秒）
+                    </div>
                   </div>
                 </div>
               </el-card>
@@ -443,7 +448,8 @@
         <el-form-item label="连接线类型">
           <el-select v-model="editingPoint.connectionType" style="width: 100%">
             <el-option label="横线" value="horizontal" />
-            <el-option label="先竖后横" value="vertical-horizontal" />
+            <el-option label="L型（先竖后横）" value="vertical-horizontal" />
+            <el-option label="无连接线" value="none" />
           </el-select>
         </el-form-item>
       </el-form>
@@ -494,20 +500,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue';
+import { ref, computed, nextTick, onMounted, onUnmounted, watch } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import {
   Check,
   Close,
-  Setting,
-  Picture,
-  FolderOpened,
   Plus,
   Delete,
   EditPen,
   Download,
-  Upload,
-  UploadFilled
+  Upload
 } from '@element-plus/icons-vue';
 
 // 定义警示点类型
@@ -519,7 +521,7 @@ interface PuzzlePoint {
   found: boolean;
   highlightTitle: string;
   highlightDetail: string;
-  connectionType?: 'horizontal' | 'vertical-horizontal';
+  connectionType?: 'horizontal' | 'vertical-horizontal' | 'none';
 }
 
 // 定义关卡类型
@@ -585,15 +587,115 @@ const totalPoints = computed(() => {
   return props.allGameLevels.reduce((total, level) => total + level.points.length, 0);
 });
 
-// 菜单选择处理
-const handleMenuSelect = (index: string) => {
-  activeMenu.value = index;
+// 计算属性：确保min ≤ max的约束
+const maxLevels = computed(() => props.allGameLevels.length);
+const minLevels = computed(() => {
+  // 确保min <= max，当没有图片时，min和max都设为0
+  if (maxLevels.value === 0) return 0;
+  return 1;
+});
+
+const maxFlashThreshold = computed(() => Math.min(30, gameSettings.value.countdownSeconds));
+const minFlashThreshold = computed(() => {
+  // 确保min <= max
+  const max = maxFlashThreshold.value;
+  return Math.min(5, max);
+});
+
+const safeMaxFlashThreshold = computed(() => {
+  const min = minFlashThreshold.value;
+  const max = maxFlashThreshold.value;
+  return min <= max ? max : 10;
+});
+
+// 安全的值检查：确保min <= max
+const safeMinLevels = computed(() => {
+  const min = minLevels.value;
+  const max = maxLevels.value;
+  return min <= max ? min : 0;
+});
+
+const safeMaxLevels = computed(() => {
+  const min = minLevels.value;
+  const max = maxLevels.value;
+  return min <= max ? max : 0;
+});
+
+const safeMinFlashThreshold = computed(() => {
+  const min = minFlashThreshold.value;
+  const max = maxFlashThreshold.value;
+  return min <= max ? min : 5;
+});
+
+
+
+// 自动夹逼函数：确保数据在合法范围内
+const clampValues = () => {
+  // 夹逼关卡数量
+  if (maxLevels.value > 0) {
+    gameSettings.value.totalLevels = Math.max(
+      minLevels.value,
+      Math.min(maxLevels.value, gameSettings.value.totalLevels)
+    );
+  } else {
+    gameSettings.value.totalLevels = 0;
+  }
+  
+  // 夹逼闪烁阈值
+  const maxFlash = maxFlashThreshold.value;
+  const minFlash = minFlashThreshold.value;
+  if (maxFlash >= minFlash) {
+    gameSettings.value.flashThreshold = Math.max(
+      minFlash,
+      Math.min(maxFlash, gameSettings.value.flashThreshold)
+    );
+  } else {
+    // 如果max < min，重置为安全值
+    gameSettings.value.flashThreshold = Math.min(5, gameSettings.value.countdownSeconds);
+  }
+  
+  // 夹逼倒计时
+  gameSettings.value.countdownSeconds = Math.max(10, Math.min(120, gameSettings.value.countdownSeconds));
 };
+
+// 监听倒计时变化，自动调整闪烁阈值
+watch(() => gameSettings.value.countdownSeconds, (newCountdown) => {
+  if (gameSettings.value.flashThreshold > newCountdown) {
+    gameSettings.value.flashThreshold = Math.min(30, newCountdown);
+  }
+  // 确保数据一致性
+  nextTick(() => {
+    clampValues();
+  });
+});
+
+// 监听图片数量变化，自动调整关卡数量并夹逼
+watch(() => props.allGameLevels.length, (newLength) => {
+  if (newLength === 0) {
+    gameSettings.value.totalLevels = 0;
+  } else if (gameSettings.value.totalLevels > newLength) {
+    gameSettings.value.totalLevels = newLength;
+  }
+  // 每次变化后都进行夹逼
+  nextTick(() => {
+    clampValues();
+  });
+});
+
+// 监听gameSettings变化，确保数据始终有效
+watch(() => gameSettings.value, () => {
+  nextTick(() => {
+    clampValues();
+  });
+}, { deep: true });
 
 // 保存设置
 const saveSettings = async () => {
   try {
     saving.value = true;
+    
+    // 保存前进行夹逼，确保数据合法
+    clampValues();
     
     // 更新关卡数量
     emit('update:totalLevels', gameSettings.value.totalLevels);
@@ -602,6 +704,21 @@ const saveSettings = async () => {
     localStorage.setItem('gameTotalLevels', gameSettings.value.totalLevels.toString());
     localStorage.setItem('gameCountdownSeconds', gameSettings.value.countdownSeconds.toString());
     localStorage.setItem('gameFlashThreshold', gameSettings.value.flashThreshold.toString());
+    
+    // 尝试同步到全局store（如果存在）
+    try {
+      const globalStore = (window as any).$store;
+      if (globalStore && globalStore.dispatch) {
+        globalStore.dispatch('game/updateSettings', {
+          totalLevels: gameSettings.value.totalLevels,
+          countdownSeconds: gameSettings.value.countdownSeconds,
+          flashThreshold: gameSettings.value.flashThreshold
+        });
+        console.log('✅ 设置已同步到全局store');
+      }
+    } catch (storeError) {
+      console.log('全局store同步失败，仅使用本地存储:', storeError);
+    }
     
     ElMessage.success('设置已保存！');
     emit('close');
@@ -754,6 +871,32 @@ onMounted(() => {
   if (savedFlashThreshold) {
     gameSettings.value.flashThreshold = parseInt(savedFlashThreshold);
   }
+  
+  // 初始化后进行夹逼，确保数据合法
+  nextTick(() => {
+    clampValues();
+    
+    // 额外验证：确保所有值都在合法范围内
+    if (gameSettings.value.countdownSeconds < 10) {
+      gameSettings.value.countdownSeconds = 10;
+    }
+    if (gameSettings.value.countdownSeconds > 120) {
+      gameSettings.value.countdownSeconds = 120;
+    }
+    
+    // 确保闪烁阈值不超过倒计时
+    if (gameSettings.value.flashThreshold > gameSettings.value.countdownSeconds) {
+      gameSettings.value.flashThreshold = Math.min(30, gameSettings.value.countdownSeconds);
+    }
+    
+    // 确保关卡数量不超过图片数量
+    if (gameSettings.value.totalLevels > props.allGameLevels.length) {
+      gameSettings.value.totalLevels = props.allGameLevels.length;
+    }
+    
+    // 再次夹逼确保一致性
+    clampValues();
+  });
 });
 
 onUnmounted(() => {
@@ -926,6 +1069,11 @@ const deleteImage = async (index: number) => {
     }
     emit('update:allGameLevels', props.allGameLevels);
     
+    // 删除图片后自动夹逼，确保数据合法
+    nextTick(() => {
+      clampValues();
+    });
+    
     ElMessage.success('图片已删除！');
   } catch {
     // 用户取消删除
@@ -980,6 +1128,11 @@ const handleImageUpload = (file: any) => {
       
       selectedImageIndex.value = updatedLevels.length - 1;
       showUploadDialog.value = false;
+      
+      // 添加图片后自动夹逼，确保数据合法
+      nextTick(() => {
+        clampValues();
+      });
       
       ElMessage.success(`图片上传成功！尺寸: ${naturalWidth}x${naturalHeight}`);
     };
@@ -1058,6 +1211,12 @@ const importLevels = () => {
             selectedImageIndex.value = null;
             editingPointIndex.value = null;
             editingPoint.value = null;
+            
+            // 导入数据后自动夹逼，确保数据合法
+            nextTick(() => {
+              clampValues();
+            });
+            
             ElMessage.success(`成功导入 ${importedLevels.length} 个关卡！`);
           }).catch(() => {
             // 用户取消导入

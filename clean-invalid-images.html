@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>清理无效图片数据</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .action { margin: 10px 0; padding: 15px; border: 1px solid #ccc; border-radius: 8px; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        button { padding: 10px 20px; margin: 5px; border: none; border-radius: 5px; cursor: pointer; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        pre { background: #f5f5f5; padding: 10px; border-radius: 5px; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <h1>清理无效图片数据</h1>
+    <div id="status"></div>
+    
+    <div class="action">
+        <h3>1. 检查当前存储数据</h3>
+        <button class="btn-primary" onclick="checkCurrentData()">检查存储数据</button>
+        <div id="check-result"></div>
+    </div>
+    
+    <div class="action">
+        <h3>2. 清理无效的图片数据</h3>
+        <button class="btn-danger" onclick="cleanInvalidImages()">清理无效数据</button>
+        <div id="clean-result"></div>
+    </div>
+    
+    <div class="action">
+        <h3>3. 重置为只包含预置图片</h3>
+        <button class="btn-success" onclick="resetToPresetOnly()">重置为预置图片</button>
+        <div id="reset-result"></div>
+    </div>
+    
+    <div class="action">
+        <h3>4. 测试功能</h3>
+        <button class="btn-primary" onclick="window.open('/admin/images', '_blank')">打开图片管理</button>
+        <button class="btn-success" onclick="window.open('/', '_blank')">测试游戏</button>
+    </div>
+
+    <script>
+        function checkCurrentData() {
+            const resultDiv = document.getElementById('check-result');
+            
+            try {
+                const gameData = localStorage.getItem('game-data');
+                let gameDataObj = null;
+                
+                if (gameData) {
+                    gameDataObj = JSON.parse(gameData);
+                }
+                
+                const allKeys = Object.keys(localStorage);
+                const imageKeys = allKeys.filter(key => key.startsWith('image_'));
+                
+                resultDiv.innerHTML = `
+                    <div class="info">
+                        <h4>存储数据检查结果:</h4>
+                        <p><strong>localStorage 总键数:</strong> ${allKeys.length}</p>
+                        <p><strong>game-data 存在:</strong> ${gameData ? '是' : '否'}</p>
+                        <p><strong>关卡数据:</strong> ${gameDataObj && gameDataObj.levels ? gameDataObj.levels.length + ' 个' : '无'}</p>
+                        <p><strong>image_ 开头的键:</strong> ${imageKeys.length} 个</p>
+                        <pre>${JSON.stringify({
+                            allKeys: allKeys,
+                            imageKeys: imageKeys,
+                            gameDataStructure: gameDataObj ? {
+                                version: gameDataObj.version,
+                                levelsCount: gameDataObj.levels ? gameDataObj.levels.length : 0,
+                                settingsCount: gameDataObj.settings ? Object.keys(gameDataObj.settings).length : 0
+                            } : null
+                        }, null, 2)}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">检查失败: ${error.message}</div>`;
+            }
+        }
+        
+        function cleanInvalidImages() {
+            const resultDiv = document.getElementById('clean-result');
+            
+            try {
+                const gameData = localStorage.getItem('game-data');
+                let cleanedCount = 0;
+                
+                if (gameData) {
+                    const gameDataObj = JSON.parse(gameData);
+                    
+                    if (gameDataObj.levels) {
+                        // 过滤掉无效的关卡（没有image或image为空）
+                        const originalCount = gameDataObj.levels.length;
+                        gameDataObj.levels = gameDataObj.levels.filter(level => 
+                            level && level.image && level.image.trim() !== ''
+                        );
+                        cleanedCount = originalCount - gameDataObj.levels.length;
+                        
+                        // 保存清理后的数据
+                        localStorage.setItem('game-data', JSON.stringify(gameDataObj));
+                    }
+                }
+                
+                // 清理无效的 image_ 键
+                const allKeys = Object.keys(localStorage);
+                const imageKeys = allKeys.filter(key => key.startsWith('image_'));
+                let invalidImageKeys = 0;
+                
+                imageKeys.forEach(key => {
+                    try {
+                        const imageData = localStorage.getItem(key);
+                        const parsedData = JSON.parse(imageData);
+                        if (!parsedData.image || parsedData.image.trim() === '') {
+                            localStorage.removeItem(key);
+                            invalidImageKeys++;
+                        }
+                    } catch (e) {
+                        localStorage.removeItem(key);
+                        invalidImageKeys++;
+                    }
+                });
+                
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        <p>✅ 清理完成！</p>
+                        <p><strong>清理的无效关卡:</strong> ${cleanedCount} 个</p>
+                        <p><strong>清理的无效图片键:</strong> ${invalidImageKeys} 个</p>
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">清理失败: ${error.message}</div>`;
+            }
+        }
+        
+        function resetToPresetOnly() {
+            const resultDiv = document.getElementById('reset-result');
+            
+            try {
+                // 清理所有游戏相关数据
+                const keysToRemove = [];
+                Object.keys(localStorage).forEach(key => {
+                    if (key.startsWith('game-') || key.startsWith('image_') || key.includes('level') || key.includes('preset')) {
+                        keysToRemove.push(key);
+                    }
+                });
+                
+                keysToRemove.forEach(key => localStorage.removeItem(key));
+                
+                // 设置初始的空数据，让系统使用预置图片
+                const initialGameData = {
+                    version: '2.0',
+                    settings: {
+                        totalLevels: 12,
+                        countdownSeconds: 30,
+                        flashThreshold: 10
+                    },
+                    levels: [], // 空的自定义关卡，系统会自动使用预置图片
+                    exportTime: new Date().toISOString()
+                };
+                
+                localStorage.setItem('game-data', JSON.stringify(initialGameData));
+                
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        <p>✅ 重置完成！</p>
+                        <p><strong>清理的键:</strong> ${keysToRemove.length} 个</p>
+                        <p><strong>设置:</strong> 12张预置图片模式</p>
+                        <p>现在系统将只显示12张预置图片</p>
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">重置失败: ${error.message}</div>`;
+            }
+        }
+        
+        // 页面加载时自动检查
+        window.onload = () => {
+            checkCurrentData();
+        };
+    </script>
+</body>
+</html>

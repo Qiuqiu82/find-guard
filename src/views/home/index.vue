@@ -1,29 +1,20 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch, onUnmounted, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
+import { useStore } from 'vuex'
+import { ElMessage } from 'element-plus';
+import { presetImages } from '../../data/presetImages';
 
-// 静态导入所有图片
-import p1Img from '@/assets/images/pic/p1.jpg';
-import p2Img from '@/assets/images/pic/p2.jpg';
-import p3Img from '@/assets/images/pic/p3.jpg';
-import p4Img from '@/assets/images/pic/p4.jpg';
-import p5Img from '@/assets/images/pic/p5.jpg';
-import p6Img from '@/assets/images/pic/p6.jpg';
-import p7Img from '@/assets/images/pic/p7.jpg';
-import p8Img from '@/assets/images/pic/p8.jpg';
-import p9Img from '@/assets/images/pic/p9.jpg';
-import office12Img from '@/assets/images/pic/office12.jpg';
-import office13Img from '@/assets/images/pic/office13.jpg';
-import office14Img from '@/assets/images/pic/office14.jpg';
 
-// 静态导入星星图标
-import oneStarImg from '@/assets/icon/one-star.png';
-import emptyStarImg from '@/assets/icon/empty.png';
+// 星星图标路径（直接使用public路径方式）
 
 const router = useRouter();
+const store = useStore();
 
-// 星星图标计算属性
-const starIcon = computed(() => gameSuccess.value ? oneStarImg : emptyStarImg);
+
+
+// 星星图标计算属性（使用public目录）
+const starIcon = computed(() => gameSuccess.value ? '/assets/icon/one-star.png' : '/assets/icon/empty.png');
 
 // 定义关卡点位类型
 interface PuzzlePoint {
@@ -42,11 +33,15 @@ interface GameLevel {
   points: PuzzlePoint[];
 }
 
+// 游戏配置（从Store读取）
+const gameSettings = computed(() => store.getters['game/currentSettings']);
+const effectiveGameLevels = computed(() => store.getters['game/effectiveGameLevels']);
+
 // 游戏状态
 const hearts = ref(3); // 初始3颗心
 const currentLevel = ref(1); // 当前关卡
-const totalLevels = ref(6); // 总关卡数 - 改为响应式，可调整
-const timeLeft = ref(30); // 倒计时30秒
+const totalLevels = computed(() => effectiveGameLevels.value); // 从Store读取有效关卡数
+const timeLeft = ref(30); // 倒计时秒数 - 将在初始化时从配置读取
 const gameStarted = ref(false); // 游戏是否开始
 const gameOver = ref(false); // 游戏是否结束
 const gameSuccess = ref(false); // 游戏是否成功
@@ -55,7 +50,7 @@ const isTimeUp = ref(false); // 是否是倒计时结束导致的游戏结束
 let timer: number | null = null; // 计时器
 
 // 添加调试模式开关
-const debugMode = ref(false); // 设置为true开启调试模式
+const debugMode = ref(true); // 设置为true开启调试模式
 const useOrderedImages = ref(true); // 调试时按顺序显示图片，不随机
 const pauseTimer = ref(true); // 调试时暂停倒计时
 
@@ -76,459 +71,8 @@ const SCALE_Y = DESIGN_HEIGHT / OLD_DESIGN_HEIGHT; // 1.3125
 
 
 
-// 所有可用的游戏图片和提示信息（使用原始绝对坐标）
-const allGameLevelsRaw: GameLevel[] = [
-  {
-    image: p1Img,
-    points: [
-      { 
-        x: 50, 
-        y: 7, 
-        width: 240, 
-        height: 40, 
-        found: false, 
-        highlightTitle: '注意辨别发件主题',
-        highlightDetail: '邮件主题为通知的，需格外注意邮件真实性'
-      },
-      { 
-        x: 118, 
-        y: 97, 
-        width: 300, 
-        height: 33, 
-        found: false, 
-        highlightTitle: '发件人邮箱异常',
-        highlightDetail: '发件人伪造安全服务中心，需要核实实际域名是否为公司内部真实域名'
-      },
-      { 
-        x: 135, 
-        y: 423, 
-        width: 140, 
-        height: 34, 
-        found: false, 
-        highlightTitle: '正文内容要留心',
-        highlightDetail: '邮件内容包含登录地点异常，制造紧张气氛，首先通过邮箱网站进行查询'
-      },
-      { 
-        x: 125, 
-        y: 620, 
-        width: 125, 
-        height: 59, 
-        found: false, 
-        highlightTitle: '注意邮件链接',
-        highlightDetail: '避免从邮件内部重置密码链接进行点击访问，如需重置密码通过官方途径进行'
-      }
-    ]
-  },
-  {
-    image: p2Img,
-    points: [
-      { 
-        x: 50, 
-        y: 7, 
-        width: 240, 
-        height: 40, 
-        found: false, 
-        highlightTitle: '注意辨别发件主题',
-        highlightDetail: '邮件主题为通知的，需格外注意邮件真实性'
-      },
-      { 
-        x: 118, 
-        y: 97, 
-        width: 300, 
-        height: 33, 
-        found: false, 
-        highlightTitle: '发件人邮箱异常',
-        highlightDetail: '发件人伪造安全服务中心，需要核实实际域名是否为公司内部真实域名'
-      },
-      { 
-        x: 135, 
-        y: 423, 
-        width: 140, 
-        height: 34, 
-        found: false, 
-        highlightTitle: '正文内容要留心',
-        highlightDetail: '邮件内容包含登录地点异常，制造紧张气氛，首先通过邮箱网站进行查询'
-      },
-      { 
-        x: 125, 
-        y: 620, 
-        width: 125, 
-        height: 59, 
-        found: false, 
-        highlightTitle: '注意邮件链接',
-        highlightDetail: '避免从邮件内部重置密码链接进行点击访问，如需重置密码通过官方途径进行'
-      }
-    ]
-  },
-  {
-    image: p3Img,
-    points: [
-      { 
-        x: 50, 
-        y: 7, 
-        width: 240, 
-        height: 40, 
-        found: false, 
-        highlightTitle: '注意辨别发件主题',
-        highlightDetail: '邮件主题为通知的，需格外注意邮件真实性'
-      },
-      { 
-        x: 118, 
-        y: 97, 
-        width: 300, 
-        height: 33, 
-        found: false, 
-        highlightTitle: '发件人邮箱异常',
-        highlightDetail: '发件人伪造安全服务中心，需要核实实际域名是否为公司内部真实域名'
-      },
-      { 
-        x: 135, 
-        y: 423, 
-        width: 140, 
-        height: 34, 
-        found: false, 
-        highlightTitle: '正文内容要留心',
-        highlightDetail: '邮件内容包含登录地点异常，制造紧张气氛，首先通过邮箱网站进行查询'
-      },
-      { 
-        x: 125, 
-        y: 620, 
-        width: 125, 
-        height: 59, 
-        found: false, 
-        highlightTitle: '注意邮件链接',
-        highlightDetail: '避免从邮件内部重置密码链接进行点击访问，如需重置密码通过官方途径进行'
-      }
-    ]
-  },
-  {
-    image: p4Img,
-    points: [
-      { 
-        x: 50, 
-        y: 7, 
-        width: 240, 
-        height: 40, 
-        found: false, 
-        highlightTitle: '注意辨别发件主题',
-        highlightDetail: '邮件主题为通知的，需格外注意邮件真实性'
-      },
-      { 
-        x: 118, 
-        y: 97, 
-        width: 300, 
-        height: 33, 
-        found: false, 
-        highlightTitle: '发件人邮箱异常',
-        highlightDetail: '发件人伪造安全服务中心，需要核实实际域名是否为公司内部真实域名'
-      },
-      { 
-        x: 135, 
-        y: 423, 
-        width: 140, 
-        height: 34, 
-        found: false, 
-        highlightTitle: '正文内容要留心',
-        highlightDetail: '邮件内容包含登录地点异常，制造紧张气氛，首先通过邮箱网站进行查询'
-      },
-      { 
-        x: 125, 
-        y: 620, 
-        width: 125, 
-        height: 59, 
-        found: false, 
-        highlightTitle: '注意邮件链接',
-        highlightDetail: '避免从邮件内部重置密码链接进行点击访问，如需重置密码通过官方途径进行'
-      }
-    ]
-  },
-  {
-    image: p5Img,
-    points: [
-      { 
-        x: 50, 
-        y: 7, 
-        width: 240, 
-        height: 40, 
-        found: false, 
-        highlightTitle: '注意辨别发件主题',
-        highlightDetail: '邮件主题为通知的，需格外注意邮件真实性'
-      },
-      { 
-        x: 118, 
-        y: 97, 
-        width: 300, 
-        height: 33, 
-        found: false, 
-        highlightTitle: '发件人邮箱异常',
-        highlightDetail: '发件人伪造安全服务中心，需要核实实际域名是否为公司内部真实域名'
-      },
-      { 
-        x: 135, 
-        y: 423, 
-        width: 140, 
-        height: 34, 
-        found: false, 
-        highlightTitle: '正文内容要留心',
-        highlightDetail: '邮件内容包含登录地点异常，制造紧张气氛，首先通过邮箱网站进行查询'
-      },
-      { 
-        x: 125, 
-        y: 620, 
-        width: 125, 
-        height: 59, 
-        found: false, 
-        highlightTitle: '注意邮件链接',
-        highlightDetail: '避免从邮件内部重置密码链接进行点击访问，如需重置密码通过官方途径进行'
-      }
-    ]
-  },
-  {
-    image: p6Img,
-    points: [
-      { 
-        x: 50, 
-        y: 7, 
-        width: 240, 
-        height: 40, 
-        found: false, 
-        highlightTitle: '注意辨别发件主题',
-        highlightDetail: '邮件主题为通知的，需格外注意邮件真实性'
-      },
-      { 
-        x: 118, 
-        y: 97, 
-        width: 300, 
-        height: 33, 
-        found: false, 
-        highlightTitle: '发件人邮箱异常',
-        highlightDetail: '发件人伪造安全服务中心，需要核实实际域名是否为公司内部真实域名'
-      },
-      { 
-        x: 135, 
-        y: 423, 
-        width: 140, 
-        height: 34, 
-        found: false, 
-        highlightTitle: '正文内容要留心',
-        highlightDetail: '邮件内容包含登录地点异常，制造紧张气氛，首先通过邮箱网站进行查询'
-      },
-      { 
-        x: 125, 
-        y: 620, 
-        width: 125, 
-        height: 59, 
-        found: false, 
-        highlightTitle: '注意邮件链接',
-        highlightDetail: '避免从邮件内部重置密码链接进行点击访问，如需重置密码通过官方途径进行'
-      }
-    ]
-  },
-  {
-    image: p7Img,
-    points: [
-      { 
-        x: 50, 
-        y: 7, 
-        width: 240, 
-        height: 40, 
-        found: false, 
-        highlightTitle: '注意辨别发件主题',
-        highlightDetail: '邮件主题为通知的，需格外注意邮件真实性'
-      },
-      { 
-        x: 118, 
-        y: 97, 
-        width: 300, 
-        height: 33, 
-        found: false, 
-        highlightTitle: '发件人邮箱异常',
-        highlightDetail: '发件人伪造安全服务中心，需要核实实际域名是否为公司内部真实域名'
-      },
-      { 
-        x: 135, 
-        y: 423, 
-        width: 140, 
-        height: 34, 
-        found: false, 
-        highlightTitle: '正文内容要留心',
-        highlightDetail: '邮件内容包含登录地点异常，制造紧张气氛，首先通过邮箱网站进行查询'
-      },
-      { 
-        x: 125, 
-        y: 620, 
-        width: 125, 
-        height: 59, 
-        found: false, 
-        highlightTitle: '注意邮件链接',
-        highlightDetail: '避免从邮件内部重置密码链接进行点击访问，如需重置密码通过官方途径进行'
-      }
-    ]
-  },
-  {
-    image: p8Img,
-    points: [
-      { 
-        x: 50, 
-        y: 7, 
-        width: 240, 
-        height: 40, 
-        found: false, 
-        highlightTitle: '注意辨别发件主题',
-        highlightDetail: '邮件主题为通知的，需格外注意邮件真实性'
-      },
-      { 
-        x: 118, 
-        y: 97, 
-        width: 300, 
-        height: 33, 
-        found: false, 
-        highlightTitle: '发件人邮箱异常',
-        highlightDetail: '发件人伪造安全服务中心，需要核实实际域名是否为公司内部真实域名'
-      },
-      { 
-        x: 135, 
-        y: 423, 
-        width: 140, 
-        height: 34, 
-        found: false, 
-        highlightTitle: '正文内容要留心',
-        highlightDetail: '邮件内容包含登录地点异常，制造紧张气氛，首先通过邮箱网站进行查询'
-      },
-      { 
-        x: 125, 
-        y: 620, 
-        width: 125, 
-        height: 59, 
-        found: false, 
-        highlightTitle: '注意邮件链接',
-        highlightDetail: '避免从邮件内部重置密码链接进行点击访问，如需重置密码通过官方途径进行'
-      }
-    ]
-  },
-  {
-    image: p9Img,
-    points: [
-      { 
-        x: 50, 
-        y: 7, 
-        width: 240, 
-        height: 40, 
-        found: false, 
-        highlightTitle: '注意辨别发件主题',
-        highlightDetail: '邮件主题为通知的，需格外注意邮件真实性'
-      },
-      { 
-        x: 118, 
-        y: 97, 
-        width: 300, 
-        height: 33, 
-        found: false, 
-        highlightTitle: '发件人邮箱异常',
-        highlightDetail: '发件人伪造安全服务中心，需要核实实际域名是否为公司内部真实域名'
-      },
-      { 
-        x: 135, 
-        y: 423, 
-        width: 140, 
-        height: 34, 
-        found: false, 
-        highlightTitle: '正文内容要留心',
-        highlightDetail: '邮件内容包含登录地点异常，制造紧张气氛，首先通过邮箱网站进行查询'
-      },
-      { 
-        x: 125, 
-        y: 620, 
-        width: 125, 
-        height: 59, 
-        found: false, 
-        highlightTitle: '注意邮件链接',
-        highlightDetail: '避免从邮件内部重置密码链接进行点击访问，如需重置密码通过官方途径进行'
-      }
-    ]
-  },
-  {
-    image: office12Img,
-    points: [
-      { 
-        x: 20, 
-        y: 540, 
-        width: 330, 
-        height: 180, 
-        found: false, 
-        highlightTitle: '敏感文件即用即取',
-        highlightDetail: '打印机内部敏感文件，即用即取，避免放在公共区域'
-      },
-      { 
-        x: 530, 
-        y: 420, 
-        width: 350, 
-        height: 180, 
-        found: false, 
-        highlightTitle: '手机要及时锁屏',
-        highlightDetail: '个人手机要及时锁屏，请妥善保管好'
-      }
-    ]
-  },
-  {
-    image: office13Img,
-    points: [
-      { 
-        x: 20, 
-        y: 540, 
-        width: 330, 
-        height: 180, 
-        found: false, 
-        highlightTitle: '敏感文件即用即取',
-        highlightDetail: '打印机内部敏感文件，即用即取，避免放在公共区域'
-      },
-      { 
-        x: 530, 
-        y: 420, 
-        width: 350, 
-        height: 180, 
-        found: false, 
-        highlightTitle: '手机要及时锁屏',
-        highlightDetail: '个人手机要及时锁屏，请妥善保管好'
-      }
-    ]
-  },
-  {
-    image: office14Img,
-    points: [
-      { 
-        x: 20, 
-        y: 540, 
-        width: 330, 
-        height: 180, 
-        found: false, 
-        highlightTitle: '敏感文件即用即取',
-        highlightDetail: '打印机内部敏感文件，即用即取，避免放在公共区域'
-      },
-      { 
-        x: 530, 
-        y: 420, 
-        width: 350, 
-        height: 180, 
-        found: false, 
-        highlightTitle: '手机要及时锁屏',
-        highlightDetail: '个人手机要及时锁屏，请妥善保管好'
-      }
-    ]
-  }
-];
-
-// 缩放坐标到正确尺寸的游戏数据
-const allGameLevels: GameLevel[] = allGameLevelsRaw.map(level => ({
-  ...level,
-  points: level.points.map(point => ({
-    ...point,
-    x: point.x * SCALE_X,
-    y: point.y * SCALE_Y,
-    width: point.width * SCALE_X,
-    height: point.height * SCALE_Y
-  }))
-}));
+// 添加调试信息
+console.log('🔍 调试信息 - presetImages:', presetImages);
 
 // 当前游戏的关卡数据
 const gameLevels = ref<GameLevel[]>([]);
@@ -538,11 +82,24 @@ const dynamicGameLevels = ref<GameLevel[]>([]);
 
 // 合并后的所有可用关卡数据
 const allAvailableLevels = computed(() => {
-  // 优先使用编辑器保存的动态数据，如果没有则使用默认数据
+  // 优先使用编辑器保存的动态数据，如果没有则使用预置图片
   if (dynamicGameLevels.value.length > 0) {
     return dynamicGameLevels.value;
   }
-  return allGameLevels;
+  
+  // 如果没有动态数据，将预置图片转换为游戏关卡格式
+  return presetImages.map((img: any) => ({
+    image: img.url,
+    points: (img.warningPoints || []).map((wp: any) => ({
+      x: wp.x,
+      y: wp.y,
+      width: wp.width,
+      height: wp.height,
+      found: false,
+      highlightTitle: wp.title,
+      highlightDetail: wp.description
+    }))
+  }));
 });
 
 // 以下变量暂时保留，可能在后续功能中使用
@@ -552,9 +109,31 @@ const allAvailableLevels = computed(() => {
 // 获取当前关卡数据
 const currentLevelData = computed(() => {
   if (!gameLevels.value || gameLevels.value.length === 0 || currentLevel.value < 1) {
+    console.log('currentLevelData: 无效的游戏关卡数据');
     return { image: '', points: [] };
   }
-  return gameLevels.value[currentLevel.value - 1];
+  
+  const levelData = gameLevels.value[currentLevel.value - 1];
+  console.log('currentLevelData: 关卡', currentLevel.value, '数据:', levelData);
+  
+  // 验证警示点数据
+  if (levelData && levelData.points) {
+    console.log('🎯 当前关卡警示点数据:', {
+      imageUrl: levelData.image,
+      pointsCount: levelData.points.length,
+      points: levelData.points.map((p, i) => ({
+        index: i,
+        x: p.x,
+        y: p.y,
+        width: p.width,
+        height: p.height,
+        title: p.highlightTitle,
+        detail: p.highlightDetail
+      }))
+    });
+  }
+  
+  return levelData;
 });
 
 // 当前关卡的解密点
@@ -564,9 +143,10 @@ const puzzlePoints = computed(() => {
 
 // 响应式的解密点坐标（基于图片自然尺寸转换）
 const responsivePuzzlePoints = computed(() => {
-  return puzzlePoints.value.map(point => {
+  const result = puzzlePoints.value.map(point => {
     const imageInfo = getImageDisplayInfo();
     if (!imageInfo) {
+      console.log('⚠️ 无法获取图片显示信息，使用原始坐标');
       return {
         ...point,
         pixelX: point.x,
@@ -578,21 +158,127 @@ const responsivePuzzlePoints = computed(() => {
     
     // 获取图片的自然尺寸作为基准
     const img = gameImageRef.value?.querySelector('img');
-    const naturalWidth = img?.naturalWidth || DESIGN_WIDTH;
-    const naturalHeight = img?.naturalHeight || DESIGN_HEIGHT;
+    if (!img) {
+      console.warn('⚠️ 找不到图片元素');
+      return {
+        ...point,
+        pixelX: point.x,
+        pixelY: point.y,
+        pixelWidth: point.width,
+        pixelHeight: point.height
+      };
+    }
     
-    // 计算缩放比例
+    // 如果图片还没有加载完成，先使用备用方案
+    if (!img.complete || !img.naturalWidth || img.naturalWidth === 0) {
+      console.warn('⚠️ 图片未加载完成，无法计算坐标', {
+        complete: img.complete,
+        naturalWidth: img.naturalWidth,
+        naturalHeight: img.naturalHeight,
+        src: img.src?.substring(0, 50) + '...'
+      });
+      return {
+        ...point,
+        pixelX: point.x,
+        pixelY: point.y,
+        pixelWidth: point.width,
+        pixelHeight: point.height
+      };
+    }
+    
+    const naturalWidth = img.naturalWidth;
+    const naturalHeight = img.naturalHeight;
+    
+    // 检测坐标类型：比例坐标 (0-1) 还是像素坐标
+    const isPercentCoords = point.x <= 1 && point.y <= 1 && point.width <= 1 && point.height <= 1;
+    
+    let pixelX, pixelY, pixelWidth, pixelHeight;
+    
+    if (isPercentCoords) {
+      // 比例坐标：转换为像素坐标
+      pixelX = point.x * naturalWidth;
+      pixelY = point.y * naturalHeight;
+      pixelWidth = point.width * naturalWidth;
+      pixelHeight = point.height * naturalHeight;
+    } else {
+      // 已经是像素坐标，直接使用
+      pixelX = point.x;
+      pixelY = point.y;
+      pixelWidth = point.width;
+      pixelHeight = point.height;
+    }
+    
+    // 应用显示缩放和偏移
     const scaleX = imageInfo.displayWidth / naturalWidth;
     const scaleY = imageInfo.displayHeight / naturalHeight;
     
-    return {
+    // 🚨 检测到异常的坐标数据 - 这种情况现在应该在数据加载时就被修复了
+    if (point.x === 0 && point.y === 0 && point.width === 1 && point.height === 1) {
+      console.warn('⚠️ 运行时仍发现异常坐标数据，这表明数据修复可能不完整:', {
+        pointData: point,
+        currentLevel: currentLevel.value,
+        imageInfo: {
+          naturalWidth, 
+          naturalHeight,
+          src: img.src?.substring(0, 50) + '...'
+        }
+      });
+      
+      // 这种情况现在应该很少见，因为在数据加载时已经修复了
+      // 但仍然提供降级处理
+      const pointIndex = gameLevels.value[currentLevel.value - 1]?.points?.indexOf(point) || 0;
+      
+      // 返回合理的比例坐标显示位置
+      return {
+        ...point,
+        pixelX: (0.1 + pointIndex * 0.15) * naturalWidth * scaleX + imageInfo.offsetX,
+        pixelY: (0.2 + pointIndex * 0.1) * naturalHeight * scaleY + imageInfo.offsetY,
+        pixelWidth: 0.12 * naturalWidth * scaleX,
+        pixelHeight: 0.08 * naturalHeight * scaleY,
+        // 标记为运行时修复
+        isRuntimeFixed: true
+      };
+    }
+    
+    const convertedPoint = {
       ...point,
-      pixelX: point.x * scaleX + imageInfo.offsetX,
-      pixelY: point.y * scaleY + imageInfo.offsetY,
-      pixelWidth: point.width * scaleX,
-      pixelHeight: point.height * scaleY
+      pixelX: pixelX * scaleX + imageInfo.offsetX,
+      pixelY: pixelY * scaleY + imageInfo.offsetY,
+      pixelWidth: pixelWidth * scaleX,
+      pixelHeight: pixelHeight * scaleY
     };
+    
+        console.log(`🎯 警示点 ${point.highlightTitle || '未命名'} 坐标转换:`, {
+      原始坐标: { x: point.x, y: point.y, width: point.width, height: point.height },
+      坐标类型: isPercentCoords ? '比例坐标(0-1)' : '像素坐标',
+      图片信息: imageInfo,
+      自然尺寸: { naturalWidth, naturalHeight },
+      像素坐标: { pixelX, pixelY, pixelWidth, pixelHeight },
+      显示缩放: { scaleX, scaleY },
+      最终显示: { 
+        pixelX: convertedPoint.pixelX, 
+        pixelY: convertedPoint.pixelY, 
+        pixelWidth: convertedPoint.pixelWidth, 
+        pixelHeight: convertedPoint.pixelHeight
+      }
+    });
+    
+    // 警告：如果尺寸太小，说明可能有问题
+    if (convertedPoint.pixelWidth < 5 || convertedPoint.pixelHeight < 5) {
+      console.warn(`⚠️ 警告：警示点 ${point.highlightTitle || '未命名'} 转换后尺寸过小!`, {
+        原始尺寸: { width: point.width, height: point.height },
+        转换后尺寸: { pixelWidth: convertedPoint.pixelWidth, pixelHeight: convertedPoint.pixelHeight },
+        缩放比例: { scaleX, scaleY },
+        图片自然尺寸: { naturalWidth, naturalHeight },
+        图片显示尺寸: { displayWidth: imageInfo.displayWidth, displayHeight: imageInfo.displayHeight }
+      });
+    }
+    
+    return convertedPoint;
   });
+  
+  console.log('🎯 所有警示点响应式坐标计算完成:', result);
+  return result;
 });
 
 
@@ -629,6 +315,8 @@ const updateWindowWidth = () => {
 
 // 强制重新计算的触发器
 const recalculateTrigger = ref(0);
+// 防止重复显示异常坐标警告
+const errorWarningShown = ref(false);
 
 // 图片加载完成的处理
 const onImageLoaded = () => {
@@ -638,7 +326,7 @@ const onImageLoaded = () => {
     
     // 调试信息：显示图片的实际尺寸
     if (gameImageRef.value) {
-      const img = gameImageRef.value.querySelector('img');
+      const img = gameImageRef.value.querySelector('img') as HTMLImageElement;
       if (img) {
         console.log('图片自然尺寸:', img.naturalWidth, 'x', img.naturalHeight);
         console.log('图片显示尺寸:', img.getBoundingClientRect().width, 'x', img.getBoundingClientRect().height);
@@ -683,8 +371,13 @@ const convertClickToOriginal = (clickX: number, clickY: number) => {
   
   // 获取图片的自然尺寸
   const img = gameImageRef.value?.querySelector('img');
-  const naturalWidth = img?.naturalWidth || DESIGN_WIDTH;
-  const naturalHeight = img?.naturalHeight || DESIGN_HEIGHT;
+  if (!img || !img.complete || img.naturalWidth === 0) {
+    console.warn('⚠️ 图片未加载完成，无法转换点击坐标');
+    return { x: clickX, y: clickY };
+  }
+  
+  const naturalWidth = img.naturalWidth;
+  const naturalHeight = img.naturalHeight;
   
   // 计算相对于图片的坐标
   const relativeX = clickX - imageInfo.offsetX;
@@ -693,6 +386,15 @@ const convertClickToOriginal = (clickX: number, clickY: number) => {
   // 转换为原始图片坐标
   const originalX = (relativeX / imageInfo.displayWidth) * naturalWidth;
   const originalY = (relativeY / imageInfo.displayHeight) * naturalHeight;
+  
+  // 添加调试日志
+  console.log('🔍 点击坐标转换调试:', {
+    clickX, clickY,
+    imageInfo,
+    relativeX, relativeY,
+    naturalWidth, naturalHeight,
+    originalX, originalY
+  });
   
   return { x: originalX, y: originalY };
 };
@@ -733,13 +435,33 @@ const shuffleArray = <T>(array: T[]): T[] => {
 const selectRandomLevels = (): GameLevel[] => {
   // 如果是调试模式且设置了按顺序显示，则直接返回前n个关卡
   if (debugMode.value && useOrderedImages.value) {
-    return JSON.parse(JSON.stringify(allAvailableLevels.value.slice(0, totalLevels.value)));
+    const levels = JSON.parse(JSON.stringify(allAvailableLevels.value.slice(0, totalLevels.value)));
+    // 确保所有点的found状态都是false
+    levels.forEach((level: GameLevel) => {
+      if (level.points) {
+        level.points.forEach((point: PuzzlePoint) => {
+          point.found = false;
+        });
+      }
+    });
+    return levels;
   }
   
   // 正常随机逻辑
   const allLevelsCopy: GameLevel[] = JSON.parse(JSON.stringify(allAvailableLevels.value));
   const shuffledLevels = shuffleArray(allLevelsCopy);
-  return shuffledLevels.slice(0, totalLevels.value);
+  const selectedLevels = shuffledLevels.slice(0, totalLevels.value);
+  
+  // 确保所有点的found状态都是false
+  selectedLevels.forEach(level => {
+    if (level.points) {
+      level.points.forEach(point => {
+        point.found = false;
+      });
+    }
+  });
+  
+  return selectedLevels;
 };
 
 // 添加直接跳转到指定关卡的功能
@@ -751,6 +473,15 @@ const jumpToLevel = (levelIndex: number) => {
     const selectedLevel = allLevelsCopy[levelIndex];
     const otherLevels = allLevelsCopy.filter((_, i) => i !== levelIndex);
     gameLevels.value = [selectedLevel, ...otherLevels.slice(0, totalLevels.value - 1)];
+    
+    // 确保所有点的found状态都是false
+    gameLevels.value.forEach(level => {
+      if (level.points) {
+        level.points.forEach(point => {
+          point.found = false;
+        });
+      }
+    });
     
     // 重置游戏状态但保持在当前关卡
     currentLevel.value = 1;
@@ -773,20 +504,22 @@ const jumpToLevel = (levelIndex: number) => {
 
 // 初始化游戏
 const initGame = () => {
-  // 从本地存储读取关卡数设置
-  const savedTotalLevels = localStorage.getItem('gameTotalLevels');
-  if (savedTotalLevels) {
-    const parsed = parseInt(savedTotalLevels);
-    if (parsed >= 1 && parsed <= allAvailableLevels.value.length) {
-      totalLevels.value = parsed;
-    }
-  }
+  // 初始化Store中的游戏数据
+  store.dispatch('game/initGame');
   
-  // 加载动态游戏数据
+  // 先加载动态游戏数据
   loadDynamicGameData();
   
+  // 验证数据加载
+  console.log('🚀 游戏初始化 - 数据验证:', {
+    allAvailableLevels: allAvailableLevels.value,
+    dynamicGameLevels: dynamicGameLevels.value.length,
+    presetImagesCount: presetImages.length
+  });
+  
+  // 从Store配置读取游戏设置
   hearts.value = 3;
-  timeLeft.value = 30;
+  timeLeft.value = gameSettings.value.countdownSeconds;
   currentLevel.value = 1;
   gameStarted.value = true;
   gameOver.value = false;
@@ -807,6 +540,18 @@ const initGame = () => {
         const selectedLevel = allLevelsCopy[index];
         const otherLevels = allLevelsCopy.filter((_, i) => i !== index);
         gameLevels.value = [selectedLevel, ...otherLevels.slice(0, totalLevels.value - 1)];
+        
+        // 确保所有点的found状态都是false
+        gameLevels.value.forEach(level => {
+          if (level.points) {
+            level.points.forEach(point => {
+              point.found = false;
+            });
+          }
+        });
+        
+        // 启动倒计时
+        startTimer();
         return; // 提前返回，不执行下面的随机选择
       }
     }
@@ -814,6 +559,14 @@ const initGame = () => {
   
   // 随机选择n个关卡
   gameLevels.value = selectRandomLevels();
+  
+  console.log('🎮 初始化游戏完成，总关卡数:', totalLevels.value, '当前游戏关卡数:', gameLevels.value.length);
+  console.log('🎮 选择的关卡详情:', gameLevels.value.map((level, i) => ({
+    index: i,
+    image: level.image,
+    pointsCount: level.points?.length || 0,
+    hasPoints: !!level.points
+  })));
   
   // 启动倒计时
   startTimer();
@@ -854,6 +607,104 @@ const togglePauseTimer = () => {
   }
 };
 
+// 清理和修复异常数据的函数
+const cleanupAbnormalData = () => {
+  console.log('🧹 开始清理异常数据...');
+  
+  // 检查Store中的所有关卡数据
+  const storeLevels = store.getters['game/currentLevels'] || [];
+  let hasAbnormalData = false;
+  let fixedLevels: any[] = [];
+  
+  if (storeLevels.length > 0) {
+    fixedLevels = storeLevels.map((level: any) => {
+      const fixedPoints = (level.points || []).map((point: any, index: number) => {
+        if (point.x === 0 && point.y === 0 && point.width === 1 && point.height === 1) {
+          hasAbnormalData = true;
+          console.log(`🔧 修复Store中点位 ${index + 1} 的异常数据:`, point);
+          
+          // 提供合理的比例坐标
+          return {
+            ...point,
+            x: 0.1 + (index * 0.15), // 水平分布，从10%开始
+            y: 0.2 + (index * 0.1),  // 垂直分布，从20%开始  
+            width: 0.12,              // 12%宽度
+            height: 0.08,             // 8%高度
+            highlightTitle: point.highlightTitle || `警示点 ${index + 1}`,
+            highlightDetail: point.highlightDetail || '请在编辑器中重新设置此点位的位置和描述'
+          };
+        }
+        return point;
+      });
+      
+      return {
+        ...level,
+        points: fixedPoints
+      };
+    });
+  }
+  
+  // 检查当前游戏关卡数据
+  const currentLevelData = gameLevels.value[currentLevel.value - 1];
+  if (currentLevelData && currentLevelData.points) {
+    const cleanedPoints = currentLevelData.points.map((point: any, index: number) => {
+      if (point.x === 0 && point.y === 0 && point.width === 1 && point.height === 1) {
+        hasAbnormalData = true;
+        console.log(`🔧 修复游戏关卡点位 ${index + 1} 的异常数据`);
+        
+        return {
+          ...point,
+          x: 0.1 + (index * 0.15),
+          y: 0.2 + (index * 0.1),
+          width: 0.12,
+          height: 0.08,
+          highlightTitle: point.highlightTitle || `警示点 ${index + 1}`,
+          highlightDetail: point.highlightDetail || '请在编辑器中重新设置此点位的位置和描述'
+        };
+      }
+      return point;
+    });
+    
+    if (hasAbnormalData) {
+      gameLevels.value[currentLevel.value - 1].points = cleanedPoints;
+    }
+  }
+  
+  if (hasAbnormalData) {
+    // 更新Store中的数据
+    if (fixedLevels.length > 0) {
+      store.commit('game/SET_LEVELS', fixedLevels);
+      console.log('✅ Store数据已修复');
+    }
+    
+    // 强制保存到localStorage
+    try {
+      const gameData = {
+        version: '2.0',
+        settings: store.getters['game/currentSettings'],
+        levels: fixedLevels,
+        exportTime: new Date().toISOString()
+      };
+      
+      localStorage.setItem('game-data', JSON.stringify(gameData));
+      console.log('✅ 异常数据已清理并保存到Store和localStorage');
+      ElMessage.success('异常数据已自动修复！游戏将重新加载。');
+      
+      // 重新加载游戏数据
+      setTimeout(() => {
+        location.reload();
+      }, 1000);
+      
+    } catch (error) {
+      console.error('保存清理后的数据失败:', error);
+      ElMessage.error('数据修复失败，请重试');
+    }
+  } else {
+    console.log('✅ 没有发现异常数据');
+    ElMessage.info('当前数据正常，无需清理');
+  }
+};
+
 // 结束游戏
 const endGame = () => {
   if (timer) clearInterval(timer);
@@ -875,9 +726,14 @@ const endGame = () => {
 
 // 下一关
 const continueGame = () => {
+  console.log('继续游戏，当前关卡:', currentLevel.value, '总关卡数:', totalLevels.value);
+  console.log('当前游戏关卡数据:', gameLevels.value);
+  
   if (currentLevel.value < totalLevels.value) {
     currentLevel.value++;
-    timeLeft.value = 30;
+    console.log('进入下一关，新关卡:', currentLevel.value);
+    
+    timeLeft.value = gameSettings.value.countdownSeconds;
     gameStarted.value = true;
     gameOver.value = false;
     gameSuccess.value = false;
@@ -885,12 +741,23 @@ const continueGame = () => {
     wrongClicks.value = 0;
     isTimeUp.value = false; // 重置倒计时结束状态
     
+    // 重置当前关卡中所有点的found状态
+    if (gameLevels.value && gameLevels.value.length > 0 && currentLevel.value <= gameLevels.value.length) {
+      const currentLevelIndex = currentLevel.value - 1;
+      if (gameLevels.value[currentLevelIndex] && gameLevels.value[currentLevelIndex].points) {
+        console.log('重置关卡', currentLevel.value, '的点状态');
+        gameLevels.value[currentLevelIndex].points.forEach(point => {
+          point.found = false;
+        });
+      }
+    }
+    
     // 重新启动计时器
     startTimer();
     
-
   } else {
     // 游戏通关，所有关卡完成
+    console.log('游戏通关！');
     gameOver.value = true;
     gameSuccess.value = true;
     isTimeUp.value = false; // 重置倒计时结束状态
@@ -919,14 +786,69 @@ const handleImageClick = (event: MouseEvent) => {
   // 检查是否点击了解密点
   let clickedPoint = false;
   
+  // 添加调试信息
+  console.log('🎯 点击检测调试:', {
+    originalClick,
+    puzzlePointsCount: puzzlePoints.value.length,
+    puzzlePoints: puzzlePoints.value.map((p, i) => ({
+      index: i,
+      found: p.found,
+      bounds: { x: p.x, y: p.y, width: p.width, height: p.height },
+      endX: p.x + p.width,
+      endY: p.y + p.height
+    }))
+  });
+  
   for (let i = 0; i < puzzlePoints.value.length; i++) {
     const point = puzzlePoints.value[i];
-    if (!point.found && 
-        originalClick.x >= point.x && originalClick.x <= point.x + point.width && 
-        originalClick.y >= point.y && originalClick.y <= point.y + point.height) {
+    
+    // 获取图片自然尺寸用于坐标转换
+    const img = gameImageRef.value?.querySelector('img');
+    if (!img || !img.complete || img.naturalWidth === 0) {
+      continue; // 跳过无法获取尺寸的情况
+    }
+    
+    const naturalWidth = img.naturalWidth;
+    const naturalHeight = img.naturalHeight;
+    
+    // 检测坐标类型并转换为像素坐标
+    const isPercentCoords = point.x <= 1 && point.y <= 1 && point.width <= 1 && point.height <= 1;
+    let pointPixelX, pointPixelY, pointPixelWidth, pointPixelHeight;
+    
+    if (isPercentCoords) {
+      // 比例坐标：转换为像素坐标
+      pointPixelX = point.x * naturalWidth;
+      pointPixelY = point.y * naturalHeight;
+      pointPixelWidth = point.width * naturalWidth;
+      pointPixelHeight = point.height * naturalHeight;
+    } else {
+      // 已经是像素坐标，直接使用
+      pointPixelX = point.x;
+      pointPixelY = point.y;
+      pointPixelWidth = point.width;
+      pointPixelHeight = point.height;
+    }
+    
+    const isInBounds = !point.found && 
+        originalClick.x >= pointPixelX && originalClick.x <= pointPixelX + pointPixelWidth && 
+        originalClick.y >= pointPixelY && originalClick.y <= pointPixelY + pointPixelHeight;
+    
+    console.log(`🎯 检查点 ${i}:`, {
+      found: point.found,
+      clickX: originalClick.x,
+      clickY: originalClick.y,
+      原始坐标: { x: point.x, y: point.y, width: point.width, height: point.height },
+      坐标类型: isPercentCoords ? '比例坐标(0-1)' : '像素坐标',
+      像素坐标: { x: pointPixelX, y: pointPixelY, width: pointPixelWidth, height: pointPixelHeight },
+      边界: { startX: pointPixelX, endX: pointPixelX + pointPixelWidth, startY: pointPixelY, endY: pointPixelY + pointPixelHeight },
+      isInBounds
+    });
+    
+    if (isInBounds) {
       // 找到了一个解密点
       point.found = true;
       clickedPoint = true;
+      console.log('✅ 找到警示点:', i);
       
       // 添加点击反馈效果 - 移除闪烁效果，直接显示透明高亮
       // const gameImage = event.currentTarget as HTMLElement;
@@ -967,6 +889,120 @@ const goToHome = () => {
   router.push('/');
 };
 
+// 调试函数
+const debugGameData = () => {
+  console.log('🎯 调试游戏数据:');
+  console.log('当前关卡:', currentLevel.value);
+  console.log('游戏关卡:', gameLevels.value);
+  
+  // 检查第一个关卡是否是自定义图片
+  const firstLevel = gameLevels.value[0];
+  if (firstLevel && firstLevel.image && firstLevel.image.startsWith('data:image')) {
+    console.log('🔍 检测到自定义图片关卡，点位数据可能有问题');
+    console.log('关卡ID:', (firstLevel as any).id);
+    console.log('关卡名称:', (firstLevel as any).name);
+    
+    // 检查localStorage中对应的原始数据
+    const imageId = (firstLevel as any).id;
+    if (imageId) {
+      const savedData = localStorage.getItem(`image_${imageId}`);
+      if (savedData) {
+        try {
+          const parsedData = JSON.parse(savedData);
+          console.log('📦 localStorage中的原始数据:', parsedData);
+        } catch (e) {
+          console.error('解析localStorage数据失败:', e);
+        }
+      } else {
+        console.log('📦 localStorage中没有找到数据，键名:', `image_${imageId}`);
+      }
+    }
+  }
+  
+  // 获取当前关卡的点位数据
+  const currentLevelData = gameLevels.value[currentLevel.value - 1];
+  console.log('当前关卡数据:', currentLevelData);
+  if (currentLevelData) {
+    const points = currentLevelData.points || (currentLevelData as any).warningPoints;
+    console.log('当前关卡点位:', points);
+    
+    // 详细展示每个点位的坐标
+    if (points && points.length > 0) {
+      console.log('\n📍 详细点位坐标:');
+      points.forEach((point, index) => {
+        console.log(`点位 ${index + 1}:`, {
+          x: point.x,
+          y: point.y,
+          width: point.width,
+          height: point.height,
+          isPercent: typeof point.x === 'string' && point.x.includes('%')
+        });
+      });
+      
+      // 检查游戏容器和图片尺寸
+      const gameContainer = document.querySelector('.game-container');
+      const gameImage = document.querySelector('.game-image') as HTMLImageElement;
+      if (gameContainer && gameImage) {
+        console.log('\n🖼️ 容器和图片尺寸:');
+        console.log('游戏容器:', {
+          width: gameContainer.clientWidth,
+          height: gameContainer.clientHeight
+        });
+        console.log('游戏图片:', {
+          width: gameImage.clientWidth,
+          height: gameImage.clientHeight,
+          naturalWidth: gameImage.naturalWidth,
+          naturalHeight: gameImage.naturalHeight
+        });
+      }
+    }
+  }
+  
+  // 检查localStorage中的所有image_开头的键
+  console.log('\n📦 localStorage中的图片数据:');
+  const imageKeys = [];
+  for (let i = 0; i < 100; i++) {
+    const key = `image_${i}`;
+    const data = localStorage.getItem(key);
+    if (data) {
+      try {
+        const parsed = JSON.parse(data);
+        imageKeys.push({ key, data: parsed });
+        console.log(`${key}:`, parsed);
+      } catch (e) {
+        console.warn(`${key} 解析失败:`, e);
+      }
+    }
+  }
+  
+  // 检查game-data
+  const gameData = localStorage.getItem('game-data');
+  if (gameData) {
+    try {
+      const parsed = JSON.parse(gameData);
+      console.log('\n🎮 game-data:', parsed);
+    } catch (e) {
+      console.warn('game-data 解析失败:', e);
+    }
+  }
+  
+  // 检查gameLevels
+  const savedLevels = localStorage.getItem('gameLevels');
+  if (savedLevels) {
+    try {
+      const parsed = JSON.parse(savedLevels);
+      console.log('\n🏆 savedLevels:', parsed);
+    } catch (e) {
+      console.warn('savedLevels 解析失败:', e);
+    }
+  }
+};
+
+// 暴露调试函数到全局
+if (typeof window !== 'undefined') {
+  (window as any).debugGameData = debugGameData;
+}
+
 // 组件挂载时初始化游戏
 onMounted(() => {
   initGame();
@@ -987,6 +1023,16 @@ onMounted(() => {
   
   // 添加页面可见性变化监听器，确保从编辑器返回后能重新加载数据
   document.addEventListener('visibilitychange', handleVisibilityChange);
+  
+  // 监听localStorage变化，确保数据同步
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'game-data') {
+      console.log('🔄 检测到game-data变化，重新加载数据');
+      store.dispatch('game/forceRefresh').then(() => {
+        loadDynamicGameData();
+      });
+    }
+  });
 });
 
 // 监听点的变化，不再需要更新连接线
@@ -1058,10 +1104,18 @@ const handleHomeIconClick = () => {
   
   lastClickTime.value = currentTime;
   
-  // 如果连续点击5次，进入编辑器
+  // 如果连续点击5次，进入管理系统
   if (homeIconClickCount.value >= 5) {
-    router.push('/level-editor');
+    router.push('/admin/settings');
     homeIconClickCount.value = 0; // 重置计数
+  } else if (homeIconClickCount.value === 1) {
+    // 单次点击延迟执行，避免与连续点击冲突
+    setTimeout(() => {
+      if (homeIconClickCount.value === 1) {
+        goToHome(); // 返回首页
+        homeIconClickCount.value = 0;
+      }
+    }, 300);
   }
 };
 
@@ -1091,8 +1145,8 @@ const handleImageUpload = (event: Event) => {
       return;
     }
     
-    // 提示用户使用编辑器
-    alert('图片上传功能已在关卡编辑器中实现！\n\n请连续点击5次主页图标进入编辑器，然后使用"添加新图片"功能。');
+    // 提示用户使用管理系统
+    alert('图片上传功能已在管理系统中实现！\n\n请连续点击5次主页图标进入管理系统，然后使用"图片管理"功能。');
     target.value = ''; // 清空文件选择
   }
 };
@@ -1100,46 +1154,131 @@ const handleImageUpload = (event: Event) => {
 // 加载动态游戏数据
 const loadDynamicGameData = () => {
   try {
-    const savedLevels = localStorage.getItem('gameLevels');
-    if (savedLevels) {
-      const parsedLevels = JSON.parse(savedLevels);
-      if (Array.isArray(parsedLevels) && parsedLevels.length > 0) {
-        // 验证数据结构
-        const validLevels = parsedLevels.filter(level => 
-          level.image && 
-          Array.isArray(level.points) &&
-          typeof level.image === 'string'
-        );
-        
-        if (validLevels.length > 0) {
-          console.log('🎮 加载动态游戏数据:', validLevels.length, '个关卡');
-          dynamicGameLevels.value = validLevels;
-          return;
+    // 将预置图片转换为游戏关卡格式
+    const presetLevels: GameLevel[] = presetImages.map((img: any) => ({
+      image: img.url,
+      points: (img.warningPoints || []).map((wp: any) => ({
+        x: wp.x,
+        y: wp.y,
+        width: wp.width,
+        height: wp.height,
+        found: false,
+        highlightTitle: wp.title || wp.highlightTitle || '未命名警示点',
+        highlightDetail: wp.description || wp.highlightDetail || '请添加详细说明'
+      }))
+    }));
+    
+    console.log('📁 加载预置图片数据:', presetLevels.length, '个关卡');
+    
+    // 优先从Store获取自定义图片数据（最新的数据管理方式）
+    const storeLevels = store.getters['game/currentLevels'] || [];
+    let customLevels: GameLevel[] = [];
+    
+    if (storeLevels.length > 0) {
+      // 将Store中的数据转换为游戏关卡格式，并修复异常数据
+      customLevels = storeLevels.map((level: any) => ({
+        image: level.image || level.url,
+        points: (level.points || level.warningPoints || []).map((point: any, index: number) => {
+          // 🚨 检测并修复异常的坐标数据
+          let fixedPoint = { ...point };
+          
+          // 检测异常数据：x:0, y:0, width:1, height:1 的全图覆盖情况
+          if (point.x === 0 && point.y === 0 && point.width === 1 && point.height === 1) {
+            console.warn(`⚠️ 游戏加载时发现异常坐标数据，自动修复点位 ${index + 1}:`, point);
+            
+            // 提供合理的默认坐标（比例坐标）
+            fixedPoint = {
+              ...point,
+              x: 0.1 + (index * 0.15), // 水平分布，从10%开始
+              y: 0.2 + (index * 0.1),  // 垂直分布，从20%开始  
+              width: 0.12,              // 12%宽度
+              height: 0.08,             // 8%高度
+            };
+            
+            console.log(`✅ 点位 ${index + 1} 已修复为:`, fixedPoint);
+          }
+          
+          return {
+            x: fixedPoint.x,
+            y: fixedPoint.y,
+            width: fixedPoint.width,
+            height: fixedPoint.height,
+            found: false,
+            highlightTitle: fixedPoint.highlightTitle || fixedPoint.title || '未命名警示点',
+            highlightDetail: fixedPoint.highlightDetail || fixedPoint.description || '请添加详细说明'
+          };
+        })
+      }));
+      console.log('🎨 从Store加载自定义图片数据:', customLevels.length, '个关卡（已修复异常数据）');
+    } else {
+      // 如果Store中没有数据，作为向后兼容，尝试加载旧版本数据
+      const savedLevels = localStorage.getItem('gameLevels');
+      
+      if (savedLevels) {
+        try {
+          const parsedLevels = JSON.parse(savedLevels);
+          if (Array.isArray(parsedLevels) && parsedLevels.length > 0) {
+            // 验证数据结构
+            customLevels = parsedLevels.filter((level: any) => 
+              level.image && 
+              Array.isArray(level.points) &&
+              typeof level.image === 'string'
+            );
+            console.log('⚠️ 从旧版本gameLevels加载数据:', customLevels.length, '个关卡');
+            
+            // 建议用户使用新的管理界面
+            if (customLevels.length > 0) {
+              console.warn('检测到旧版本数据，建议使用图片管理界面重新管理图片数据');
+            }
+          }
+        } catch (e) {
+          console.error('解析旧版本gameLevels数据失败:', e);
         }
       }
     }
     
-    // 如果没有有效的动态数据，使用默认数据
-    console.log('🎮 使用默认游戏数据');
-    dynamicGameLevels.value = [];
+    // 合并预置图片和自定义图片
+    const allLevels = [...presetLevels, ...customLevels];
+    
+    // 确保所有点的found状态都是false
+    allLevels.forEach((level: GameLevel) => {
+      if (level.points) {
+        level.points.forEach((point: PuzzlePoint) => {
+          point.found = false;
+        });
+      }
+    });
+    
+    dynamicGameLevels.value = allLevels;
+    
+    // 关卡数由Store管理，这里只记录可用关卡数
+    console.log('🎮 总共可用关卡:', allLevels.length, '个，有效游戏关卡数:', effectiveGameLevels.value);
+    
   } catch (error) {
-    console.error('❌ 加载动态游戏数据失败:', error);
+    console.error('❌ 加载游戏数据失败:', error);
+    // 如果加载失败，使用内置的默认数据
     dynamicGameLevels.value = [];
+    console.log('🔄 使用内置默认数据, 可用关卡:', presetImages.length, '个，有效游戏关卡数:', effectiveGameLevels.value);
   }
 };
 
 // 处理页面可见性变化
 const handleVisibilityChange = () => {
   if (!document.hidden) {
-    // 页面变为可见时，重新加载动态游戏数据
-    console.log('🔄 页面重新可见，重新加载游戏数据');
-    loadDynamicGameData();
+    // 页面变为可见时，强制刷新Store数据并重新加载
+    console.log('🔄 页面重新可见，强制刷新数据');
     
-    // 如果游戏正在进行中，重新初始化游戏以使用新数据
-    if (gameStarted.value && !gameOver.value) {
-      console.log('🎮 重新初始化游戏以使用新数据');
-      initGame();
-    }
+    // 先强制刷新Store数据
+    store.dispatch('game/forceRefresh').then(() => {
+      // 然后重新加载动态游戏数据
+      loadDynamicGameData();
+      
+      // 如果游戏正在进行中，重新初始化游戏以使用新数据
+      if (gameStarted.value && !gameOver.value) {
+        console.log('🎮 重新初始化游戏以使用新数据');
+        initGame();
+      }
+    });
   }
 };
 </script>
@@ -1192,7 +1331,7 @@ const handleVisibilityChange = () => {
         
         <!-- 主页图标 -->
         <div class="home-icon" @click="handleHomeIconClick">
-          <img src="@/assets/icon/home.png" alt="主页" />
+          <img src="/assets/icon/home.png" alt="主页" />
         </div>
       </div>
     </div>
@@ -1200,8 +1339,8 @@ const handleVisibilityChange = () => {
     <!-- 游戏区域 -->
     <div class="game-area">
       <!-- 红光闪烁效果（覆盖整个页面高度） -->
-      <div v-if="gameStarted && !gameOver && timeLeft <= 10" class="red-glow left"></div>
-      <div v-if="gameStarted && !gameOver && timeLeft <= 10" class="red-glow right"></div>
+      <div v-if="gameStarted && !gameOver && timeLeft <= gameSettings.flashThreshold" class="red-glow left"></div>
+      <div v-if="gameStarted && !gameOver && timeLeft <= gameSettings.flashThreshold" class="red-glow right"></div>
       <!-- 游戏进行中 -->
       <template v-if="gameStarted && !gameOver">
         <div ref="gameImageRef" class="game-image" @click="handleImageClick">
@@ -1359,6 +1498,14 @@ const handleVisibilityChange = () => {
           
           <!-- 调试用：显示解密点位置 -->
           <template v-if="debugMode">
+            <!-- 调试信息：显示状态 -->
+            <div v-if="responsivePuzzlePoints.length === 0" class="debug-no-points">
+              🔍 没有找到警示点数据 (debugMode: {{ debugMode }}, puzzlePoints: {{ puzzlePoints.length }})
+            </div>
+            <div v-else class="debug-points-info">
+              🎯 调试模式：找到 {{ responsivePuzzlePoints.length }} 个警示点
+            </div>
+            
             <div 
               v-for="(point, index) in responsivePuzzlePoints" 
               :key="'debug-'+index"
@@ -1370,9 +1517,12 @@ const handleVisibilityChange = () => {
                 width: `${point.pixelWidth}px`, 
                 height: `${point.pixelHeight}px` 
               }"
+              :title="`警示点 ${index + 1}: ${point.highlightTitle || '未命名'}`"
             >
               <div class="debug-info">
-                {{ index + 1 }}: ({{ point.x.toFixed(0) }},{{ point.y.toFixed(0) }}) {{ point.pixelWidth.toFixed(0) }}x{{ point.pixelHeight.toFixed(0) }}
+                {{ index + 1 }}: {{ point.highlightTitle || '未命名' }}<br/>
+                原始: ({{ point.x.toFixed(0) }},{{ point.y.toFixed(0) }}) {{ point.width.toFixed(0) }}x{{ point.height.toFixed(0) }}<br/>
+                像素: ({{ point.pixelX.toFixed(0) }},{{ point.pixelY.toFixed(0) }}) {{ point.pixelWidth.toFixed(0) }}x{{ point.pixelHeight.toFixed(0) }}
               </div>
             </div>
           </template>
@@ -1387,6 +1537,7 @@ const handleVisibilityChange = () => {
             <div class="debug-label">暂停计时：</div>
             <button class="debug-button" @click="togglePauseTimer">{{ pauseTimer ? '继续' : '暂停' }}</button>
             <button class="debug-button" @click="restartGame()">重新开始</button>
+            <button class="debug-button cleanup" @click="cleanupAbnormalData" title="检测并修复异常的坐标数据">🧹 修复坐标</button>
           </div>
         </div>
         
@@ -1395,7 +1546,7 @@ const handleVisibilityChange = () => {
           <div class="debug-label">选择图片进行调试：</div>
           <div class="debug-image-buttons">
             <button 
-              v-for="(_, index) in allGameLevels" 
+              v-for="(_, index) in allAvailableLevels" 
               :key="'level-'+index"
               class="debug-image-button"
               @click="jumpToLevel(index)"
@@ -1464,6 +1615,8 @@ const handleVisibilityChange = () => {
   position: relative;
 }
 
+
+
 .header-padding {
   padding-top: 30px !important;
 }
@@ -1478,7 +1631,7 @@ const handleVisibilityChange = () => {
 .hearts {
   display: flex;
   gap: 8px;
-  margin-left: 30px;
+  margin-left: 20px;
   margin-top: 0; /* 移除向下偏移 */
 }
 
@@ -1782,6 +1935,44 @@ const handleVisibilityChange = () => {
   z-index: 10;
 }
 
+.debug-no-points {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(255, 255, 0, 0.9);
+  color: black;
+  padding: 10px;
+  border-radius: 5px;
+  font-size: 14px;
+  z-index: 1000;
+}
+
+.debug-points-info {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(0, 255, 0, 0.9);
+  color: black;
+  padding: 10px;
+  border-radius: 5px;
+  font-size: 14px;
+  z-index: 1000;
+}
+
+.debug-info {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 5px;
+  border-radius: 3px;
+  font-size: 12px;
+  white-space: nowrap;
+  z-index: 1001;
+  pointer-events: none;
+}
+
 .puzzle-point.found {
   background-color: rgba(0, 255, 0, 0.3);
   border: 2px solid green;
@@ -1822,6 +2013,19 @@ const handleVisibilityChange = () => {
   cursor: pointer;
   font-size: 12px;
   margin-right: 10px;
+}
+
+.debug-button:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.debug-button.cleanup {
+  background-color: rgba(255, 193, 7, 0.8); /* 黄色背景表示警告/修复功能 */
+  color: #000;
+}
+
+.debug-button.cleanup:hover {
+  background-color: rgba(255, 193, 7, 1);
 }
 
 /* 调试图片选择器样式调整 */

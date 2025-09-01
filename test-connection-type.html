@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>连接线类型编辑测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-point {
+            width: 100px;
+            height: 50px;
+            background-color: #ff6b6b;
+            border: 2px solid #d63031;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 20px;
+            display: inline-block;
+            text-align: center;
+            line-height: 50px;
+            color: white;
+            font-weight: bold;
+        }
+        .test-point:hover {
+            background-color: #ff5252;
+        }
+        .connection-line {
+            position: absolute;
+            height: 3px;
+            background-color: #1a175d;
+            z-index: 10;
+        }
+        .connection-line-left {
+            width: 230px;
+        }
+        .connection-line-right {
+            width: 80px;
+        }
+        .highlight-container {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid #1a175d;
+            border-radius: 8px;
+            padding: 10px;
+            max-width: 200px;
+            z-index: 20;
+        }
+        .highlight-title {
+            font-weight: bold;
+            color: #1a175d;
+            margin-bottom: 5px;
+        }
+        .highlight-detail {
+            font-size: 12px;
+            color: #666;
+        }
+        .game-area {
+            position: relative;
+            width: 600px;
+            height: 400px;
+            border: 2px solid #ddd;
+            margin: 20px auto;
+            background: linear-gradient(45deg, #f0f0f0 25%, transparent 25%), 
+                        linear-gradient(-45deg, #f0f0f0 25%, transparent 25%), 
+                        linear-gradient(45deg, transparent 75%, #f0f0f0 75%), 
+                        linear-gradient(-45deg, transparent 75%, #f0f0f0 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
+        .dialog {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        .dialog-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            min-width: 300px;
+        }
+        .dialog-header {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #1a175d;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .dialog-footer {
+            text-align: right;
+            margin-top: 20px;
+        }
+        .btn {
+            padding: 8px 16px;
+            margin-left: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-primary {
+            background-color: #1a175d;
+            color: white;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        .btn:hover {
+            opacity: 0.8;
+        }
+        .info {
+            background-color: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>连接线类型编辑功能测试</h1>
+        
+        <div class="info">
+            <h3>功能说明：</h3>
+            <ul>
+                <li>点击红色警示点可以打开编辑对话框</li>
+                <li>在对话框中选择连接线类型：横线 或 先竖后横</li>
+                <li>保存后连接线会立即更新</li>
+                <li>标题框和详细说明框会根据连接线类型自动定位</li>
+            </ul>
+        </div>
+
+        <div class="game-area">
+            <!-- 警示点1 -->
+            <div class="test-point" style="left: 50px; top: 50px;" onclick="openDialog(0)">
+                点1
+            </div>
+            
+            <!-- 警示点2 -->
+            <div class="test-point" style="left: 200px; top: 100px;" onclick="openDialog(1)">
+                点2
+            </div>
+            
+            <!-- 警示点3 -->
+            <div class="test-point" style="left: 350px; top: 150px;" onclick="openDialog(2)">
+                点3
+            </div>
+            
+            <!-- 警示点4 -->
+            <div class="test-point" style="left: 500px; top: 200px;" onclick="openDialog(3)">
+                点4
+            </div>
+            
+            <!-- 连接线和高亮区域将通过JavaScript动态生成 -->
+        </div>
+
+        <div class="info">
+            <h3>当前状态：</h3>
+            <div id="status">等待操作...</div>
+        </div>
+    </div>
+
+    <!-- 编辑对话框 -->
+    <div id="editDialog" class="dialog">
+        <div class="dialog-content">
+            <div class="dialog-header">编辑连接线类型</div>
+            <div class="form-group">
+                <label for="connectionType">连接线类型：</label>
+                <select id="connectionType">
+                    <option value="horizontal">横线</option>
+                    <option value="vertical-horizontal">先竖后横</option>
+                </select>
+            </div>
+            <div class="dialog-footer">
+                <button class="btn btn-secondary" onclick="closeDialog()">取消</button>
+                <button class="btn btn-primary" onclick="saveConnectionType()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 测试数据
+        const testPoints = [
+            { x: 50, y: 50, width: 100, height: 50, connectionType: 'horizontal', highlightTitle: '警示点1', highlightDetail: '这是第一个警示点的详细说明' },
+            { x: 200, y: 100, width: 100, height: 50, connectionType: 'horizontal', highlightTitle: '警示点2', highlightDetail: '这是第二个警示点的详细说明' },
+            { x: 350, y: 150, width: 100, height: 50, connectionType: 'horizontal', highlightTitle: '警示点3', highlightDetail: '这是第三个警示点的详细说明' },
+            { x: 500, y: 200, width: 100, height: 50, connectionType: 'horizontal', highlightTitle: '警示点4', highlightDetail: '这是第四个警示点的详细说明' }
+        ];
+
+        let currentEditingIndex = -1;
+
+        // 打开编辑对话框
+        function openDialog(index) {
+            currentEditingIndex = index;
+            const point = testPoints[index];
+            document.getElementById('connectionType').value = point.connectionType;
+            document.getElementById('editDialog').style.display = 'block';
+            updateStatus(`正在编辑点位 ${index + 1}`);
+        }
+
+        // 关闭编辑对话框
+        function closeDialog() {
+            document.getElementById('editDialog').style.display = 'none';
+            updateStatus('等待操作...');
+        }
+
+        // 保存连接线类型
+        function saveConnectionType() {
+            if (currentEditingIndex >= 0) {
+                const newType = document.getElementById('connectionType').value;
+                testPoints[currentEditingIndex].connectionType = newType;
+                
+                // 重新渲染连接线和高亮区域
+                renderConnectionLines();
+                
+                closeDialog();
+                updateStatus(`点位 ${currentEditingIndex + 1} 的连接线类型已更新为: ${newType === 'horizontal' ? '横线' : '先竖后横'}`);
+            }
+        }
+
+        // 更新状态显示
+        function updateStatus(message) {
+            document.getElementById('status').textContent = message;
+        }
+
+        // 渲染连接线和高亮区域
+        function renderConnectionLines() {
+            // 清除现有的连接线和高亮区域
+            const existingLines = document.querySelectorAll('.connection-line, .highlight-container');
+            existingLines.forEach(el => el.remove());
+
+            // 为每个点位渲染连接线和高亮区域
+            testPoints.forEach((point, index) => {
+                renderConnectionLine(point, index);
+                renderHighlightArea(point, index);
+            });
+        }
+
+        // 渲染连接线
+        function renderConnectionLine(point, index) {
+            const gameArea = document.querySelector('.game-area');
+            
+            if (point.connectionType === 'horizontal') {
+                // 横线连接线
+                const line = document.createElement('div');
+                line.className = 'connection-line connection-line-right';
+                line.style.cssText = `
+                    position: absolute;
+                    left: ${point.x + point.width}px;
+                    top: ${point.y + point.height/2}px;
+                    width: 80px;
+                    height: 3px;
+                    background-color: #1a175d;
+                    z-index: 10;
+                    transform: translateY(-50%);
+                `;
+                gameArea.appendChild(line);
+            } else if (point.connectionType === 'vertical-horizontal') {
+                // 先竖后横连接线
+                // 竖线
+                const verticalLine = document.createElement('div');
+                verticalLine.style.cssText = `
+                    position: absolute;
+                    left: ${point.x + point.width/2}px;
+                    top: ${point.y + point.height}px;
+                    width: 3px;
+                    height: 100px;
+                    background-color: #1a175d;
+                    z-index: 10;
+                `;
+                gameArea.appendChild(verticalLine);
+                
+                // 横线
+                const horizontalLine = document.createElement('div');
+                horizontalLine.style.cssText = `
+                    position: absolute;
+                    left: ${point.x + point.width/2 - 50}px;
+                    top: ${point.y + point.height + 100}px;
+                    width: 100px;
+                    height: 3px;
+                    background-color: #1a175d;
+                    z-index: 10;
+                `;
+                gameArea.appendChild(horizontalLine);
+            }
+        }
+
+        // 渲染高亮区域
+        function renderHighlightArea(point, index) {
+            const gameArea = document.querySelector('.game-area');
+            
+            const highlight = document.createElement('div');
+            highlight.className = 'highlight-container';
+            
+            let top, left;
+            
+            if (point.connectionType === 'horizontal') {
+                // 横线：点位中心 - 30px偏移
+                top = point.y + point.height/2 - 30;
+                left = point.x + point.width + 80;
+            } else if (point.connectionType === 'vertical-horizontal') {
+                // 先竖后横：竖线100px + 横线位置 - 30px偏移
+                top = point.y + point.height + 100 - 30;
+                left = point.x + point.width/2 - 50;
+            }
+            
+            highlight.style.cssText = `
+                position: absolute;
+                top: ${top}px;
+                left: ${left}px;
+                z-index: 20;
+            `;
+            
+            highlight.innerHTML = `
+                <div class="highlight-title">${point.highlightTitle}</div>
+                <div class="highlight-detail">${point.highlightDetail}</div>
+            `;
+            
+            gameArea.appendChild(highlight);
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            renderConnectionLines();
+            updateStatus('系统已就绪，点击警示点开始编辑');
+        });
+
+        // 点击对话框外部关闭对话框
+        document.getElementById('editDialog').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeDialog();
+            }
+        });
+    </script>
+</body>
+</html>

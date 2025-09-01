@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>测试坐标数据</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .coordinate-test { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 8px; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        .summary { background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0; }
+        table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        th { background: #f0f0f0; }
+        .connection-type { font-weight: bold; }
+        .connection-right { color: #28a745; }
+        .connection-left { color: #dc3545; }
+        .connection-vertical { color: #007bff; }
+        .connection-none { color: #6c757d; }
+    </style>
+</head>
+<body>
+    <h1>坐标数据测试</h1>
+    <div id="results"></div>
+    
+    <script>
+        // 从备份文档中提取的精确坐标数据
+        const coordinateData = [
+            {
+                name: 'p1.jpg',
+                title: '邮件安全识别1',
+                points: [
+                    { x: 75, y: 9, width: 360, height: 53, connectionType: 'right', title: '注意辨别发件主题', detail: '邮件主题为通知的，需格外注意邮件真实性' },
+                    { x: 177, y: 127, width: 450, height: 43, connectionType: 'right', title: '发件人邮箱异常', detail: '发件人伪造安全服务中心，需要核实实际域名是否为公司内部真实域名' },
+                    { x: 203, y: 555, width: 210, height: 45, connectionType: 'right', title: '正文内容要留心', detail: '邮件内容包含登录地点异常，制造紧张气氛，首先通过邮箱网站进行查询' },
+                    { x: 188, y: 814, width: 188, height: 77, connectionType: 'right', title: '注意邮件链接', detail: '避免从邮件内部重置密码链接进行点击访问，如需重置密码通过官方途径进行' }
+                ]
+            },
+            {
+                name: 'p2.jpg',
+                title: '邮件安全识别2',
+                points: [
+                    { x: 72, y: 7, width: 675, height: 66, connectionType: 'right', title: '主题需要注意', detail: '公司内部的通知但是显示的是外部的邮件说明' },
+                    { x: 174, y: 129, width: 420, height: 43, connectionType: 'right', title: '发件人邮箱异常', detail: '发件人域名进行了伪装，仔细查看发现还是有区别的' },
+                    { x: 623, y: 525, width: 240, height: 53, connectionType: 'left', title: '注意邮件链接', detail: '邮件存在链接需要格外注意，首先核实链接中的域名是否为企业真实域名，如果不是及时上报' }
+                ]
+            },
+            {
+                name: 'p3.jpg',
+                title: '网站安全识别1',
+                points: [
+                    { x: 105, y: 16, width: 180, height: 59, connectionType: 'vertical-horizontal', title: '访问网站需要有证书', detail: '访问网站如果显示不安全，采用http访问，需要格外注意数据安全性，有被盗取数据的风险' },
+                    { x: 288, y: 16, width: 207, height: 59, connectionType: 'right', title: '网站域名要核对', detail: '访问网站记得核对域名，与企业真实域名存在差异' },
+                    { x: 180, y: 121, width: 255, height: 59, connectionType: 'right', title: '网站布局异常', detail: '企业logo名称存在少字的情况需要格外注意，有可能是伪造网站' },
+                    { x: 1155, y: 369, width: 570, height: 530, connectionType: 'left', title: '登录内容注意甄别', detail: '公共网站登录途径一般较多，若只是单一账号访问，并且没有注册等选项需要额外注意' }
+                ]
+            }
+        ];
+        
+        const resultsDiv = document.getElementById('results');
+        
+        // 显示总体统计
+        const totalImages = 12;
+        let totalPoints = 0;
+        coordinateData.forEach(img => totalPoints += img.points.length);
+        
+        const summaryDiv = document.createElement('div');
+        summaryDiv.className = 'summary';
+        summaryDiv.innerHTML = `
+            <h2>📊 坐标数据总览</h2>
+            <p><strong>图片总数:</strong> ${totalImages} 张</p>
+            <p><strong>显示点位:</strong> ${totalPoints} 个（前3张图片）</p>
+            <p><strong>数据源:</strong> 关卡坐标备份.md</p>
+            <p><strong>坐标系统:</strong> 基于1920x945设计尺寸</p>
+        `;
+        resultsDiv.appendChild(summaryDiv);
+        
+        // 显示每张图片的详细信息
+        coordinateData.forEach((imageData, index) => {
+            const div = document.createElement('div');
+            div.className = 'coordinate-test';
+            
+            const title = document.createElement('h3');
+            title.innerHTML = `📷 图片${index + 1}: ${imageData.name} - ${imageData.title}`;
+            div.appendChild(title);
+            
+            const info = document.createElement('p');
+            info.className = 'info';
+            info.innerHTML = `✅ 点位数量: ${imageData.points.length} 个`;
+            div.appendChild(info);
+            
+            // 创建表格显示坐标详情
+            const table = document.createElement('table');
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>序号</th>
+                        <th>X坐标</th>
+                        <th>Y坐标</th>
+                        <th>宽度</th>
+                        <th>高度</th>
+                        <th>连接类型</th>
+                        <th>标题</th>
+                        <th>详细说明</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${imageData.points.map((point, i) => `
+                        <tr>
+                            <td>${i + 1}</td>
+                            <td>${point.x}</td>
+                            <td>${point.y}</td>
+                            <td>${point.width}</td>
+                            <td>${point.height}</td>
+                            <td class="connection-type connection-${point.connectionType}">${point.connectionType}</td>
+                            <td style="max-width: 200px;">${point.title}</td>
+                            <td style="max-width: 300px; font-size: 12px;">${point.detail}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            `;
+            div.appendChild(table);
+            
+            resultsDiv.appendChild(div);
+        });
+        
+        // 检查localStorage中的数据
+        setTimeout(() => {
+            const gameData = localStorage.getItem('game-data');
+            const storageDiv = document.createElement('div');
+            storageDiv.className = 'coordinate-test';
+            
+            if (gameData) {
+                try {
+                    const parsed = JSON.parse(gameData);
+                    const levelsCount = parsed.levels ? parsed.levels.length : 0;
+                    const version = parsed.version || '未知';
+                    
+                    storageDiv.innerHTML = `
+                        <h3>💾 本地存储状态</h3>
+                        <p class="success">✅ 游戏数据已加载</p>
+                        <p><strong>版本:</strong> ${version}</p>
+                        <p><strong>关卡数量:</strong> ${levelsCount}</p>
+                        <p><strong>数据结构:</strong> ${parsed.levels ? '新版本格式' : '旧版本格式'}</p>
+                        ${levelsCount >= 12 ? '<p class="success">✅ 包含完整的12张预置图片</p>' : '<p class="error">❌ 预置图片不完整</p>'}
+                    `;
+                } catch (e) {
+                    storageDiv.innerHTML = `
+                        <h3>💾 本地存储状态</h3>
+                        <p class="error">❌ 数据格式错误: ${e.message}</p>
+                    `;
+                }
+            } else {
+                storageDiv.innerHTML = `
+                    <h3>💾 本地存储状态</h3>
+                    <p class="error">❌ 未找到游戏数据</p>
+                `;
+            }
+            
+            resultsDiv.appendChild(storageDiv);
+        }, 1000);
+        
+        // 添加操作按钮
+        const actionsDiv = document.createElement('div');
+        actionsDiv.className = 'coordinate-test';
+        actionsDiv.innerHTML = `
+            <h3>🔧 测试操作</h3>
+            <button onclick="clearAndReload()" style="padding: 10px 20px; margin: 5px; background: #dc3545; color: white; border: none; border-radius: 5px; cursor: pointer;">清理数据并重新加载</button>
+            <button onclick="window.open('/admin/images', '_blank')" style="padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">打开图片管理</button>
+            <button onclick="window.open('/', '_blank')" style="padding: 10px 20px; margin: 5px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer;">启动游戏</button>
+        `;
+        resultsDiv.appendChild(actionsDiv);
+        
+        // 清理数据并重新加载的函数
+        window.clearAndReload = function() {
+            localStorage.removeItem('game-data');
+            localStorage.removeItem('currentLevelData');
+            localStorage.clear();
+            alert('数据已清理，页面将重新加载');
+            window.location.reload();
+        };
+    </script>
+</body>
+</html>

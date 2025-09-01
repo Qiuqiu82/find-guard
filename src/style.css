@@ -93,3 +93,167 @@ button:focus-visible {
 ::-webkit-scrollbar-thumb:hover {
   background: #999;
 }
+
+/* Element Plus 菜单组件全局样式 */
+.el-menu {
+  border: none !important;
+}
+
+/* 夜间模式下右上角图标的全局样式 */
+.dark-theme .admin-header .header-right .el-button {
+  color: #e6e6e6 !important;
+}
+
+.dark-theme .admin-header .header-right .el-button:hover {
+  color: #fff !important;
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.dark-theme .admin-header .header-right .el-button .el-icon {
+  color: #e6e6e6 !important;
+}
+
+.dark-theme .admin-header .header-right .el-button:hover .el-icon {
+  color: #fff !important;
+}
+
+.dark-theme .admin-header .expand-btn {
+  color: #e6e6e6 !important;
+}
+
+.dark-theme .admin-header .expand-btn:hover {
+  color: #fff !important;
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.dark-theme .admin-header .expand-btn .el-icon {
+  color: #e6e6e6 !important;
+}
+
+.dark-theme .admin-header .expand-btn:hover .el-icon {
+  color: #fff !important;
+}
+
+.el-menu--vertical .el-menu-item,
+.el-menu--horizontal .el-menu-item {
+  color: inherit !important;
+}
+
+/* 侧边栏菜单样式 */
+.el-menu--vertical .el-menu-item {
+  color: #fff !important;
+  background-color: transparent !important;
+}
+
+.el-menu--vertical .el-menu-item:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  color: #fff !important;
+}
+
+.el-menu--vertical .el-menu-item.is-active {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+  color: #fff !important;
+}
+
+.el-menu--vertical .el-menu-item .el-icon {
+  color: #fff !important;
+}
+
+.el-menu--vertical .el-menu-item span {
+  color: #fff !important;
+}
+
+/* 暗色主题下的侧边栏菜单 */
+.dark-theme .el-menu--vertical .el-menu-item {
+  color: #e6e6e6 !important;
+}
+
+.dark-theme .el-menu--vertical .el-menu-item:hover {
+  background-color: rgba(255, 255, 255, 0.15) !important;
+  color: #fff !important;
+}
+
+.dark-theme .el-menu--vertical .el-menu-item.is-active {
+  background-color: rgba(255, 255, 255, 0.25) !important;
+  color: #fff !important;
+}
+
+.dark-theme .el-menu--vertical .el-menu-item .el-icon {
+  color: #e6e6e6 !important;
+}
+
+.dark-theme .el-menu--vertical .el-menu-item.is-active .el-icon {
+  color: #fff !important;
+}
+
+.dark-theme .el-menu--vertical .el-menu-item span {
+  color: #e6e6e6 !important;
+}
+
+.dark-theme .el-menu--vertical .el-menu-item.is-active span {
+  color: #fff !important;
+}
+
+/* 确保菜单项文字在折叠状态下也可见 */
+.el-menu--collapse .el-menu-item .el-icon {
+  color: #fff !important;
+}
+
+.dark-theme .el-menu--collapse .el-menu-item .el-icon {
+  color: #e6e6e6 !important;
+}
+
+/* Element Plus 标签页组件全局样式 */
+.el-tabs__item {
+  color: #333 !important;
+  font-weight: 500 !important;
+  transition: all 0.3s ease !important;
+}
+
+.el-tabs__item:hover {
+  color: #1e1c72 !important;
+}
+
+.el-tabs__item.is-active {
+  color: #1e1c72 !important;
+  font-weight: 600 !important;
+}
+
+/* 暗色主题下的标签页 */
+.dark-theme .el-tabs__item {
+  color: #e6e6e6 !important;
+  background-color: #2a2a2a !important;
+  border-color: #404040 !important;
+}
+
+.dark-theme .el-tabs__item:hover {
+  color: #fff !important;
+  background-color: #3a3a3a !important;
+}
+
+.dark-theme .el-tabs__item.is-active {
+  color: #fff !important;
+  background-color: #1e1c72 !important;
+  border-color: #1e1c72 !important;
+  font-weight: 600 !important;
+}
+
+
+
+/* 标签页导航栏样式 */
+.el-tabs__nav-wrap {
+  background-color: transparent !important;
+}
+
+.dark-theme .el-tabs__nav-wrap {
+  background-color: transparent !important;
+}
+
+/* 标签页内容区域 */
+.el-tabs__content {
+  background-color: transparent !important;
+}
+
+.dark-theme .el-tabs__content {
+  background-color: transparent !important;
+}
