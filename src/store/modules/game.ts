@@ -99,6 +99,57 @@ const game: Module<GameState, RootState> = {
           }
         }
         
+        // 🔄 只加载自定义图片数据：扫描localStorage中的image_*数据，排除预置图片
+        const loadedLevels: GameLevel[] = []
+        
+        // 创建预置图片URL集合，用于去重
+        const presetImageUrls = new Set(presetImages.map(img => img.url))
+        
+        // 遍历localStorage查找所有image_开头的键
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i)
+          if (key && key.startsWith('image_')) {
+            try {
+              const imageData = localStorage.getItem(key)
+              if (imageData) {
+                const parsedImageData = JSON.parse(imageData)
+                
+                // 验证必要字段，并排除预置图片
+                if (parsedImageData.image && parsedImageData.points && 
+                    !presetImageUrls.has(parsedImageData.image)) {
+                  const level: GameLevel = {
+                    id: parsedImageData.id || key.replace('image_', ''),
+                    name: parsedImageData.name || '自定义图片',
+                    url: parsedImageData.image,
+                    image: parsedImageData.image,
+                    size: parsedImageData.size || 0,
+                    width: parsedImageData.width || 0,
+                    height: parsedImageData.height || 0,
+                    points: parsedImageData.points.map((point: any) => ({
+                      x: point.x,
+                      y: point.y,
+                      width: point.width || 0,
+                      height: point.height || 0,
+                      found: false,
+                      highlightTitle: point.highlightTitle || point.title || '未命名警示点',
+                      highlightDetail: point.highlightDetail || point.description || '请添加详细说明',
+                      connectionType: point.connectionType || 'none'
+                    })),
+                    createdAt: parsedImageData.createdAt || new Date().toISOString(),
+                    updatedAt: parsedImageData.updatedAt || new Date().toISOString()
+                  }
+                  loadedLevels.push(level)
+                  console.log(`✅ 从${key}加载自定义图片数据，警示点数量:`, level.points?.length || 0)
+                } else if (presetImageUrls.has(parsedImageData.image)) {
+                  console.log(`⏭️ 跳过预置图片:`, parsedImageData.image)
+                }
+              }
+            } catch (e) {
+              console.warn(`解析${key}数据失败:`, e)
+            }
+          }
+        }
+        
         // 然后尝试加载旧格式的游戏数据（向后兼容）
         const savedData = localStorage.getItem('game-data')
         if (savedData) {
@@ -109,8 +160,23 @@ const game: Module<GameState, RootState> = {
           if (!savedSettings) {
             state.settings = migratedData.settings
           }
-          state.levels = migratedData.levels
+          
+          // 合并game-data中的关卡和扫描到的图片数据，去重（排除预置图片和已存在的自定义图片）
+          const existingImages = new Set(loadedLevels.map(level => level.image))
+          const additionalLevels = (migratedData.levels || []).filter(
+            level => level.image && 
+                     !existingImages.has(level.image) && 
+                     !presetImageUrls.has(level.image)
+          )
+          
+          state.levels = [...loadedLevels, ...additionalLevels]
+        } else {
+          // 如果没有game-data，只使用扫描到的图片数据
+          state.levels = loadedLevels
         }
+        
+        console.log(`🎮 Store加载完成，自定义关卡数:`, state.levels.length, `（预置图片已排除）`)
+        
       } catch (e) {
         console.error('Failed to load game data from storage:', e)
         // 使用默认值

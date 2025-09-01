@@ -983,12 +983,9 @@ const convertStoredDataToPixelCoordinates = (points: PuzzlePoint[], imageElement
   const convertedPoints = cleanedPoints.map((point, index) => {
     console.log(`🔍 处理点位 ${index}:`, point);
     
-    // 🔍 简化并修复比例坐标识别逻辑
-    // 如果所有值都在0-1之间，就认为是比例坐标
-    const isRatioCoordinate = point.x >= 0 && point.x <= 1 && 
-                             point.y >= 0 && point.y <= 1 && 
-                             point.width > 0 && point.width <= 1 && 
-                             point.height > 0 && point.height <= 1;
+    // 🎯 统一坐标判断：与index.vue完全相同的逻辑
+    // 检测坐标类型：比例坐标 (0-1) 还是像素坐标
+    const isPercentCoords = point.x <= 1 && point.y <= 1 && point.width <= 1 && point.height <= 1;
     
     // 🚨 特殊检查：过滤掉异常的(0,0,1,1)数据，这通常是错误的全图覆盖数据
     const isAbnormalData = point.x === 0 && point.y === 0 && point.width === 1 && point.height === 1;
@@ -1020,7 +1017,7 @@ const convertStoredDataToPixelCoordinates = (points: PuzzlePoint[], imageElement
     console.log(`🧮 点位 ${index} 坐标判断详情:`, {
       原始数据: point,
       判断结果: {
-        是否比例坐标: isRatioCoordinate,
+        是否比例坐标: isPercentCoords,
         X范围检查: { value: point.x, 在0到1之间: point.x >= 0 && point.x <= 1 },
         Y范围检查: { value: point.y, 在0到1之间: point.y >= 0 && point.y <= 1 },
         Width范围检查: { value: point.width, 在0到1之间: point.width > 0 && point.width <= 1 },
@@ -1035,7 +1032,7 @@ const convertStoredDataToPixelCoordinates = (points: PuzzlePoint[], imageElement
       图片自然尺寸: { naturalWidth, naturalHeight }
     });
     
-    if (isRatioCoordinate) {
+    if (isPercentCoords) {
       // 是比例坐标，转换为像素坐标用于编辑器显示和编辑
       const converted = {
         ...point,
@@ -2312,6 +2309,23 @@ onMounted(() => {
     forceSetPoints: debugForceSetPoints,
     getCurrentPoints: () => puzzlePoints.value,
     getImageInfo: getImageDisplayInfo,
+    cleanAbnormalData: () => {
+      const originalCount = puzzlePoints.value.length;
+      const cleanedPoints = puzzlePoints.value.filter((point: any, index: number) => {
+        if (point.x === 0 && point.y === 0 && point.width === 1 && point.height === 1) {
+          console.warn(`🧹 删除异常点位 ${index}:`, point);
+          return false;
+        }
+        if (point.x < 0 || point.y < 0 || point.width <= 0 || point.height <= 0) {
+          console.warn(`🧹 删除无效点位 ${index}:`, point);
+          return false;
+        }
+        return true;
+      });
+      puzzlePoints.value = cleanedPoints;
+      saveCurrentImageData(true);
+      console.log(`🧹 异常数据清理完成: ${originalCount} -> ${cleanedPoints.length}，已保存`);
+    },
     recalculate: () => {
       recalculateTrigger.value++;
       console.log('🔄 手动触发重新计算');
@@ -2517,31 +2531,64 @@ const finishDrawing = () => {
   if (!currentDrawingRect.value || !gameImageRef.value) return;
   
   const imageElement = gameImageRef.value.querySelector('img') as HTMLImageElement;
-  if (!imageElement) return;
+  if (!imageElement || !imageElement.complete || imageElement.naturalWidth === 0) {
+    console.error('❌ 图片未加载完成，无法完成绘制');
+    ElMessage.error('图片未加载完成，请等待后重试');
+    return;
+  }
   
   // 使用与显示时相同的方法获取图片显示信息
   const imageInfo = getImageDisplayInfo();
-  if (!imageInfo) return;
+  if (!imageInfo) {
+    console.error('❌ 无法获取图片显示信息');
+    ElMessage.error('无法获取图片显示信息，请重试');
+    return;
+  }
   
   const naturalWidth = imageElement.naturalWidth;
   const naturalHeight = imageElement.naturalHeight;
+  
+  console.log('🎨 绘制坐标转换开始:', {
+    绘制区域: currentDrawingRect.value,
+    图片显示信息: imageInfo,
+    图片自然尺寸: { naturalWidth, naturalHeight }
+  });
   
   // 计算相对于图片显示区域的坐标（减去偏移）
   const relativeX = currentDrawingRect.value.left - imageInfo.offsetX;
   const relativeY = currentDrawingRect.value.top - imageInfo.offsetY;
   
-  // 转换为相对于自然尺寸的坐标
+  // 确保相对坐标在有效范围内
+  if (relativeX < 0 || relativeY < 0 || 
+      relativeX >= imageInfo.displayWidth || relativeY >= imageInfo.displayHeight) {
+    console.error('❌ 绘制区域超出图片范围:', { relativeX, relativeY, imageInfo });
+    ElMessage.error('绘制区域超出图片范围，请重新绘制');
+    return;
+  }
+  
+  // 转换为相对于自然尺寸的像素坐标
   const naturalX = (relativeX / imageInfo.displayWidth) * naturalWidth;
   const naturalY = (relativeY / imageInfo.displayHeight) * naturalHeight;
   const naturalWidth_rect = (currentDrawingRect.value.width / imageInfo.displayWidth) * naturalWidth;
   const naturalHeight_rect = (currentDrawingRect.value.height / imageInfo.displayHeight) * naturalHeight;
   
-  // 创建新的警示点数据 - 编辑器内部直接使用基于自然尺寸的像素坐标
+  // 验证计算结果的合理性
+  if (naturalX < 0 || naturalY < 0 || naturalWidth_rect <= 0 || naturalHeight_rect <= 0 ||
+      naturalX + naturalWidth_rect > naturalWidth || naturalY + naturalHeight_rect > naturalHeight) {
+    console.error('❌ 坐标转换结果异常:', {
+      naturalX, naturalY, naturalWidth_rect, naturalHeight_rect,
+      naturalWidth, naturalHeight
+    });
+    ElMessage.error('坐标转换失败，请重新绘制');
+    return;
+  }
+  
+  // 创建新的警示点数据 - 直接使用自然尺寸的像素坐标（与预置图片格式一致）
   newWarningPoint.value = {
-    x: Math.round(naturalX),           // 自然尺寸像素坐标，用于编辑器显示
-    y: Math.round(naturalY),           // 自然尺寸像素坐标，用于编辑器显示  
-    width: Math.round(naturalWidth_rect),      // 自然尺寸像素坐标，用于编辑器显示
-    height: Math.round(naturalHeight_rect),    // 自然尺寸像素坐标，用于编辑器显示
+    x: Math.round(naturalX),           // 自然尺寸像素坐标
+    y: Math.round(naturalY),           // 自然尺寸像素坐标  
+    width: Math.round(naturalWidth_rect),      // 自然尺寸像素坐标
+    height: Math.round(naturalHeight_rect),    // 自然尺寸像素坐标
     found: false,
     highlightTitle: '',
     highlightDetail: '',
@@ -2554,14 +2601,14 @@ const finishDrawing = () => {
     图片自然尺寸: { naturalWidth, naturalHeight },
     相对显示坐标: { relativeX, relativeY },
     自然像素坐标: { naturalX, naturalY, naturalWidth_rect, naturalHeight_rect },
-    '保存时转换比例坐标预览': { 
-      x: (naturalX / naturalWidth).toFixed(4), 
-      y: (naturalY / naturalHeight).toFixed(4), 
-      width: (naturalWidth_rect / naturalWidth).toFixed(4), 
-      height: (naturalHeight_rect / naturalHeight).toFixed(4) 
+    最终像素坐标: { 
+      x: Math.round(naturalX), 
+      y: Math.round(naturalY), 
+      width: Math.round(naturalWidth_rect), 
+      height: Math.round(naturalHeight_rect) 
     }
   });
-  console.log('新警示点数据：', newWarningPoint.value);
+  console.log('新警示点数据（纯像素坐标）：', newWarningPoint.value);
   console.log('准备显示对话框，当前 showWarningPointDialog：', showWarningPointDialog.value);
   
   // 显示设置对话框
@@ -2585,6 +2632,22 @@ const saveWarningPoint = async () => {
   
   if (!newWarningPoint.value.highlightDetail?.trim()) {
     ElMessage.warning('请输入详细内容');
+    return;
+  }
+  
+  // 验证警示点坐标的有效性
+  if (newWarningPoint.value.x < 0 || newWarningPoint.value.y < 0 ||
+      newWarningPoint.value.width <= 0 || newWarningPoint.value.height <= 0) {
+    console.error('❌ 警示点坐标无效:', newWarningPoint.value);
+    ElMessage.error('警示点坐标无效，请重新绘制');
+    return;
+  }
+  
+  // 验证坐标不是异常的全图覆盖数据
+  if (newWarningPoint.value.x === 0 && newWarningPoint.value.y === 0 && 
+      newWarningPoint.value.width === 1 && newWarningPoint.value.height === 1) {
+    console.error('❌ 检测到异常的全图覆盖坐标，拒绝保存');
+    ElMessage.error('检测到异常坐标，请重新绘制');
     return;
   }
   
@@ -2623,6 +2686,22 @@ const saveAndNextWarningPoint = async () => {
   
   if (!newWarningPoint.value.highlightDetail?.trim()) {
     ElMessage.warning('请输入详细内容');
+    return;
+  }
+  
+  // 验证警示点坐标的有效性
+  if (newWarningPoint.value.x < 0 || newWarningPoint.value.y < 0 ||
+      newWarningPoint.value.width <= 0 || newWarningPoint.value.height <= 0) {
+    console.error('❌ 警示点坐标无效:', newWarningPoint.value);
+    ElMessage.error('警示点坐标无效，请重新绘制');
+    return;
+  }
+  
+  // 验证坐标不是异常的全图覆盖数据
+  if (newWarningPoint.value.x === 0 && newWarningPoint.value.y === 0 && 
+      newWarningPoint.value.width === 1 && newWarningPoint.value.height === 1) {
+    console.error('❌ 检测到异常的全图覆盖坐标，拒绝保存');
+    ElMessage.error('检测到异常坐标，请重新绘制');
     return;
   }
   
@@ -2686,14 +2765,32 @@ const updateStoreData = async (updatedImageData: any) => {
       }))
     });
     
-    // 构建新的关卡数据
+    // 构建新的关卡数据 - 验证并过滤有效的点位数据
+    const validPoints = puzzlePoints.value.filter((point: any) => {
+      // 过滤掉异常坐标
+      if (point.x === 0 && point.y === 0 && point.width === 1 && point.height === 1) {
+        console.warn('⚠️ 过滤异常的全图覆盖坐标:', point);
+        return false;
+      }
+      
+      // 过滤掉负数或零尺寸的点位
+      if (point.x < 0 || point.y < 0 || point.width <= 0 || point.height <= 0) {
+        console.warn('⚠️ 过滤无效坐标:', point);
+        return false;
+      }
+      
+      return true;
+    });
+    
+    console.log(`📝 Store更新：共${puzzlePoints.value.length}个点位，过滤后剩余${validPoints.length}个有效点位`);
+    
     const newLevelData: GameLevel = {
       image: updatedImageData.image || updatedImageData.url,
-      points: puzzlePoints.value.map((point: any) => ({
-        x: point.x,
-        y: point.y,
-        width: point.width,
-        height: point.height,
+      points: validPoints.map((point: any) => ({
+        x: Math.round(point.x),        // 确保是整数像素坐标
+        y: Math.round(point.y),        // 确保是整数像素坐标
+        width: Math.round(point.width),    // 确保是整数像素坐标
+        height: Math.round(point.height),  // 确保是整数像素坐标
         found: false,
         connectionType: point.connectionType || 'none',
         highlightTitle: point.highlightTitle || point.title || '未命名警示点',
@@ -2769,68 +2866,57 @@ const saveCurrentImageData = async (immediate = false) => {
   try {
     const imageId = route.params.id as string;
     
-    // 获取当前图片的自然尺寸用于坐标转换
-    const imageElement = gameImageRef.value?.querySelector('img');
-    const naturalWidth = imageElement ? imageElement.naturalWidth : 1;
-    const naturalHeight = imageElement ? imageElement.naturalHeight : 1;
+    // 🎯 统一坐标系统：直接保存像素坐标，与预置图片格式一致
+    console.log('💾 保存图片数据，使用纯像素坐标格式（与预置图片一致）');
     
-    // 编辑器中保存时，将像素坐标转换为比例坐标
-    const convertedPoints = puzzlePoints.value.map((point, index) => {
-      console.log(`💾 保存点位 ${index} 原始数据:`, point);
-      
-      // 🔍 简化保存时的坐标判断逻辑
-      // 比例坐标判断：值在0-1之间且不是异常的(0,0,1,1)
-      const isRatioCoordinate = point.x >= 0 && point.x <= 1 && 
-                               point.y >= 0 && point.y <= 1 && 
-                               point.width > 0 && point.width <= 1 && 
-                               point.height > 0 && point.height <= 1 &&
-                               // 排除异常的全图覆盖情况
-                               !(point.x === 0 && point.y === 0 && point.width === 1 && point.height === 1);
-      
-      console.log(`💾 保存点位 ${index} 坐标判断:`, {
-        原始数据: point,
-        判断结果: {
-          是否比例坐标: isRatioCoordinate,
-          是否全图覆盖: point.x === 0 && point.y === 0 && point.width === 1 && point.height === 1,
-          在0到1范围: point.x >= 0 && point.x <= 1 && point.y >= 0 && point.y <= 1,
-          有小数位: point.x % 1 !== 0 || point.y % 1 !== 0 || point.width % 1 !== 0 || point.height % 1 !== 0
-        },
-        图片自然尺寸: { naturalWidth, naturalHeight }
-      });
-      
-      if (isRatioCoordinate) {
-        // 已经是比例坐标，直接保存
-        console.log(`✅ 点位 ${index} 已是比例坐标，直接保存:`, point);
-        return point;
+    // 过滤并验证有效的点位数据
+    const validPuzzlePoints = puzzlePoints.value.filter((point, index) => {
+      // 过滤异常的全图覆盖坐标
+      if (point.x === 0 && point.y === 0 && point.width === 1 && point.height === 1) {
+        console.warn(`⚠️ 点位 ${index} 发现异常的全图覆盖坐标，已过滤:`, point);
+        return false;
       }
       
-      // 编辑器中的像素坐标，转换为比例坐标用于存储
-      if (naturalWidth <= 0 || naturalHeight <= 0) {
-        console.error(`❌ 图片尺寸异常，无法转换坐标:`, { naturalWidth, naturalHeight });
-        return point; // 异常情况下保持原样
+      // 过滤无效坐标
+      if (point.x < 0 || point.y < 0 || point.width <= 0 || point.height <= 0) {
+        console.warn(`⚠️ 点位 ${index} 坐标无效，已过滤:`, point);
+        return false;
       }
       
-      const converted = {
+      return true;
+    });
+    
+    console.log(`💾 保存数据：共${puzzlePoints.value.length}个点位，过滤后剩余${validPuzzlePoints.length}个有效点位`);
+    
+    // 转换为最终保存格式
+    const convertedPoints = validPuzzlePoints.map((point, index) => {
+      console.log(`💾 保存点位 ${index} 原始像素数据:`, point);
+      
+      // 验证坐标的合理性
+      const imageElement = gameImageRef.value?.querySelector('img');
+      if (imageElement) {
+        const naturalWidth = imageElement.naturalWidth;
+        const naturalHeight = imageElement.naturalHeight;
+        
+        if (point.x < 0 || point.y < 0 || 
+            point.x + point.width > naturalWidth || 
+            point.y + point.height > naturalHeight) {
+          console.warn(`⚠️ 点位 ${index} 坐标超出图片边界:`, {
+            point,
+            imageSize: { naturalWidth, naturalHeight }
+          });
+        }
+      }
+      
+      // 直接返回像素坐标，与预置图片格式一致
+      return {
         ...point,
-        x: Number((point.x / naturalWidth).toFixed(6)),
-        y: Number((point.y / naturalHeight).toFixed(6)),
-        width: Number((point.width / naturalWidth).toFixed(6)),
-        height: Number((point.height / naturalHeight).toFixed(6))
+        // 确保坐标为整数
+        x: Math.round(point.x),
+        y: Math.round(point.y),
+        width: Math.round(point.width),
+        height: Math.round(point.height)
       };
-      
-      console.log(`✅ 点位 ${index} 像素→比例坐标转换:`, { 
-        编辑器像素: point, 
-        存储比例: converted,
-        图片自然尺寸: { naturalWidth, naturalHeight }
-      });
-      
-      // 验证转换结果的合理性
-      if (converted.x < 0 || converted.x > 1 || converted.y < 0 || converted.y > 1 ||
-          converted.width <= 0 || converted.width > 1 || converted.height <= 0 || converted.height > 1) {
-        console.warn(`⚠️ 点位 ${index} 转换后的比例坐标异常:`, converted);
-      }
-      
-      return converted;
     });
     
     const updatedImageData = {
@@ -2849,7 +2935,21 @@ const saveCurrentImageData = async (immediate = false) => {
     // 额外触发Store的强制刷新
     await store.dispatch('game/forceRefresh');
     
-    console.log('✅ 图片数据已保存到localStorage和Store，并触发强制刷新');
+    // 🔄 同步更新ImagesPage的数据：发送自定义事件通知列表页面刷新
+    try {
+      // 触发storage事件，通知ImagesPage刷新
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: `image_${imageId}`,
+        newValue: JSON.stringify(updatedImageData),
+        url: window.location.href
+      }))
+      
+      console.log('🔔 已通知ImagesPage刷新数据:', imageId)
+    } catch (error) {
+      console.warn('通知ImagesPage失败:', error)
+    }
+    
+    console.log('✅ 图片数据已保存，使用纯像素坐标格式（与预置图片一致）');
   } catch (error) {
     console.error('保存图片数据失败:', error);
     ElMessage.error('保存失败，请重试');

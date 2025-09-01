@@ -4,7 +4,7 @@
  */
 
 // 连接线类型（唯一权威定义）
-export type ConnectionType = 'right' | 'left' | 'vertical-horizontal' | 'none' | 'horizontal'
+export type ConnectionType = 'right' | 'left' | 'vertical-horizontal' | 'vertical' | 'none' | 'horizontal'
 
 // 拼图点位
 export interface PuzzlePoint {

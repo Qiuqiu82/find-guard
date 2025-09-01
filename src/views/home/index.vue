@@ -27,8 +27,8 @@ interface PuzzlePoint {
   highlightDetail?: string; // 高亮区域的详细说明
 }
 
-// 定义关卡类型
-interface GameLevel {
+// 定义游戏中使用的简化关卡类型
+interface GameLevelSimple {
   image: string;
   points: PuzzlePoint[];
 }
@@ -50,7 +50,7 @@ const isTimeUp = ref(false); // 是否是倒计时结束导致的游戏结束
 let timer: number | null = null; // 计时器
 
 // 添加调试模式开关
-const debugMode = ref(true); // 设置为true开启调试模式
+const debugMode = ref(false); // 设置为true开启调试模式
 const useOrderedImages = ref(true); // 调试时按顺序显示图片，不随机
 const pauseTimer = ref(true); // 调试时暂停倒计时
 
@@ -75,20 +75,15 @@ const SCALE_Y = DESIGN_HEIGHT / OLD_DESIGN_HEIGHT; // 1.3125
 console.log('🔍 调试信息 - presetImages:', presetImages);
 
 // 当前游戏的关卡数据
-const gameLevels = ref<GameLevel[]>([]);
-
-// 动态加载的游戏关卡数据（从编辑器保存的数据）
-const dynamicGameLevels = ref<GameLevel[]>([]);
+const gameLevels = ref<GameLevelSimple[]>([]);
 
 // 合并后的所有可用关卡数据
 const allAvailableLevels = computed(() => {
-  // 优先使用编辑器保存的动态数据，如果没有则使用预置图片
-  if (dynamicGameLevels.value.length > 0) {
-    return dynamicGameLevels.value;
-  }
+  // 直接从Store获取自定义图片数据
+  const storeLevels = store.getters['game/currentLevels'] || [];
   
-  // 如果没有动态数据，将预置图片转换为游戏关卡格式
-  return presetImages.map((img: any) => ({
+  // 将预置图片转换为游戏关卡格式
+  const presetLevels: GameLevelSimple[] = presetImages.map((img: any) => ({
     image: img.url,
     points: (img.warningPoints || []).map((wp: any) => ({
       x: wp.x,
@@ -96,10 +91,35 @@ const allAvailableLevels = computed(() => {
       width: wp.width,
       height: wp.height,
       found: false,
-      highlightTitle: wp.title,
-      highlightDetail: wp.description
+      highlightTitle: wp.title || wp.highlightTitle || '未命名警示点',
+      highlightDetail: wp.description || wp.highlightDetail || '请添加详细说明'
     }))
   }));
+  
+  // 将Store中的完整GameLevel转换为简化的GameLevelSimple
+  const simplifiedStoreLevels: GameLevelSimple[] = storeLevels.map((level: any) => ({
+    image: level.image || level.url,
+    points: (level.points || []).map((point: any) => ({
+      x: point.x,
+      y: point.y,
+      width: point.width,
+      height: point.height,
+      found: false,
+      highlightTitle: point.highlightTitle || '未命名警示点',
+      highlightDetail: point.highlightDetail || '请添加详细说明'
+    }))
+  }));
+  
+  // 合并预置图片和Store中的自定义图片
+  const allLevels = [...presetLevels, ...simplifiedStoreLevels];
+  
+  console.log('🎮 allAvailableLevels 计算完成:', {
+    presetLevels: presetLevels.length,
+    storeLevels: storeLevels.length,
+    total: allLevels.length
+  });
+  
+  return allLevels;
 });
 
 // 以下变量暂时保留，可能在后续功能中使用
@@ -138,7 +158,35 @@ const currentLevelData = computed(() => {
 
 // 当前关卡的解密点
 const puzzlePoints = computed(() => {
-  return currentLevelData.value?.points || [];
+  const points = currentLevelData.value?.points || [];
+  
+  console.log('🔍 puzzlePoints 计算属性触发:', {
+    currentLevel: currentLevel.value,
+    hasCurrentLevelData: !!currentLevelData.value,
+    currentLevelDataPoints: currentLevelData.value?.points?.length || 0,
+    currentLevelImage: currentLevelData.value?.image ? '有图片' : '无图片',
+    pointsCount: points.length,
+    debugMode: debugMode.value,
+    gameLevelsCount: gameLevels.value.length
+  });
+  
+  if (debugMode.value) {
+    console.log('🔍 没有找到警示点数据', {
+      debugMode: debugMode.value,
+      puzzlePoints: points.length
+    });
+    
+    if (points.length === 0) {
+      console.log('🔍 调试信息 - 无警示点:', {
+        currentLevelData: currentLevelData.value,
+        gameLevels: gameLevels.value,
+        allAvailableLevels: allAvailableLevels.value,
+        storeLevels: store.getters['game/currentLevels']?.length || 0
+      });
+    }
+  }
+  
+  return points;
 });
 
 // 响应式的解密点坐标（基于图片自然尺寸转换）
@@ -432,12 +480,12 @@ const shuffleArray = <T>(array: T[]): T[] => {
 };
 
 // 随机选择n个关卡
-const selectRandomLevels = (): GameLevel[] => {
+const selectRandomLevels = (): GameLevelSimple[] => {
   // 如果是调试模式且设置了按顺序显示，则直接返回前n个关卡
   if (debugMode.value && useOrderedImages.value) {
     const levels = JSON.parse(JSON.stringify(allAvailableLevels.value.slice(0, totalLevels.value)));
     // 确保所有点的found状态都是false
-    levels.forEach((level: GameLevel) => {
+    levels.forEach((level: GameLevelSimple) => {
       if (level.points) {
         level.points.forEach((point: PuzzlePoint) => {
           point.found = false;
@@ -448,7 +496,7 @@ const selectRandomLevels = (): GameLevel[] => {
   }
   
   // 正常随机逻辑
-  const allLevelsCopy: GameLevel[] = JSON.parse(JSON.stringify(allAvailableLevels.value));
+  const allLevelsCopy: GameLevelSimple[] = JSON.parse(JSON.stringify(allAvailableLevels.value));
   const shuffledLevels = shuffleArray(allLevelsCopy);
   const selectedLevels = shuffledLevels.slice(0, totalLevels.value);
   
@@ -468,7 +516,7 @@ const selectRandomLevels = (): GameLevel[] => {
 const jumpToLevel = (levelIndex: number) => {
   if (levelIndex >= 0 && levelIndex < allAvailableLevels.value.length) {
     // 更新当前游戏关卡，包含所有需要的关卡
-    const allLevelsCopy: GameLevel[] = JSON.parse(JSON.stringify(allAvailableLevels.value));
+    const allLevelsCopy: GameLevelSimple[] = JSON.parse(JSON.stringify(allAvailableLevels.value));
     // 将选中的图片放到第一位，然后添加其他图片
     const selectedLevel = allLevelsCopy[levelIndex];
     const otherLevels = allLevelsCopy.filter((_, i) => i !== levelIndex);
@@ -503,7 +551,13 @@ const jumpToLevel = (levelIndex: number) => {
 };
 
 // 初始化游戏
-const initGame = () => {
+const initGame = async () => {
+  console.log('🚀 开始初始化游戏...');
+  
+  // 强制刷新Store数据，确保获取最新的图片数据
+  await store.dispatch('game/forceRefresh');
+  console.log('🔄 Store数据已强制刷新');
+  
   // 初始化Store中的游戏数据
   store.dispatch('game/initGame');
   
@@ -512,9 +566,9 @@ const initGame = () => {
   
   // 验证数据加载
   console.log('🚀 游戏初始化 - 数据验证:', {
-    allAvailableLevels: allAvailableLevels.value,
-    dynamicGameLevels: dynamicGameLevels.value.length,
-    presetImagesCount: presetImages.length
+    allAvailableLevels: allAvailableLevels.value.length,
+    presetImagesCount: presetImages.length,
+    storeLevelsFromGetter: store.getters['game/currentLevels']?.length || 0
   });
   
   // 从Store配置读取游戏设置
@@ -535,7 +589,7 @@ const initGame = () => {
       const index = parseInt(savedIndex);
       if (index >= 0 && index < allAvailableLevels.value.length) {
         // 在调试模式下，仍然需要包含所有关卡，但可以从指定索引开始
-        const allLevelsCopy: GameLevel[] = JSON.parse(JSON.stringify(allAvailableLevels.value));
+        const allLevelsCopy: GameLevelSimple[] = JSON.parse(JSON.stringify(allAvailableLevels.value));
         // 将选中的图片放到第一位，然后添加其他图片
         const selectedLevel = allLevelsCopy[index];
         const otherLevels = allLevelsCopy.filter((_, i) => i !== index);
@@ -998,9 +1052,90 @@ const debugGameData = () => {
   }
 };
 
+// 调试：强制刷新游戏数据  
+const debugForceRefreshGameData = async () => {
+  console.log('🔄 强制刷新游戏数据...');
+  
+  // 1. 强制刷新Store数据
+  await store.dispatch('game/forceRefresh');
+  console.log('✅ Store数据已刷新');
+  
+  // 2. 重新加载动态游戏数据
+  loadDynamicGameData();
+  console.log('✅ 动态游戏数据已重新加载');
+  
+  // 3. 重新初始化游戏（保持当前关卡）
+  const savedLevel = currentLevel.value;
+  gameLevels.value = selectRandomLevels();
+  currentLevel.value = savedLevel;
+  
+  console.log('✅ 游戏数据刷新完成:', {
+    gameLevelsCount: gameLevels.value.length,
+    currentLevel: currentLevel.value,
+    currentLevelPoints: currentLevelData.value?.points?.length || 0
+  });
+};
+
+// 调试：检查编辑器数据同步
+const debugCheckEditorSync = () => {
+  console.log('🔍 检查编辑器数据同步状态:');
+  
+  // 检查localStorage中的图片数据
+  const imageIds = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith('image_')) {
+      imageIds.push(key);
+    }
+  }
+  
+  console.log('📁 localStorage中的图片数据:', imageIds);
+  
+  imageIds.forEach(key => {
+    try {
+      const data = localStorage.getItem(key);
+      if (data) {
+        const parsed = JSON.parse(data);
+        console.log(`📁 ${key}:`, {
+          id: parsed.id,
+          name: parsed.name,
+          pointsCount: (parsed.points || []).length,
+          hasImage: !!(parsed.image || parsed.url),
+          updatedAt: parsed.updatedAt
+        });
+      }
+    } catch (e) {
+      console.error(`解析 ${key} 失败:`, e);
+    }
+  });
+  
+  // 检查Store状态
+  const storeLevels = store.getters['game/currentLevels'] || [];
+  console.log('🏪 Store中的关卡数据:', storeLevels.length, '个关卡');
+  
+  // 检查game-data
+  const gameData = localStorage.getItem('game-data');
+  if (gameData) {
+    try {
+      const parsed = JSON.parse(gameData);
+      console.log('🎮 game-data 中的关卡数据:', (parsed.levels || []).length, '个关卡');
+    } catch (e) {
+      console.error('game-data 解析失败:', e);
+    }
+  }
+  
+  return {
+    localStorageImages: imageIds.length,
+    storeLevels: storeLevels.length,
+    hasGameData: !!gameData
+  };
+};
+
 // 暴露调试函数到全局
 if (typeof window !== 'undefined') {
   (window as any).debugGameData = debugGameData;
+  (window as any).debugForceRefreshGameData = debugForceRefreshGameData;
+  (window as any).debugCheckEditorSync = debugCheckEditorSync;
 }
 
 // 组件挂载时初始化游戏
@@ -1151,114 +1286,18 @@ const handleImageUpload = (event: Event) => {
   }
 };
 
-// 加载动态游戏数据
+// 加载动态游戏数据（简化版本 - 只触发Store刷新）
 const loadDynamicGameData = () => {
   try {
-    // 将预置图片转换为游戏关卡格式
-    const presetLevels: GameLevel[] = presetImages.map((img: any) => ({
-      image: img.url,
-      points: (img.warningPoints || []).map((wp: any) => ({
-        x: wp.x,
-        y: wp.y,
-        width: wp.width,
-        height: wp.height,
-        found: false,
-        highlightTitle: wp.title || wp.highlightTitle || '未命名警示点',
-        highlightDetail: wp.description || wp.highlightDetail || '请添加详细说明'
-      }))
-    }));
+    console.log('🔄 开始加载动态游戏数据...');
     
-    console.log('📁 加载预置图片数据:', presetLevels.length, '个关卡');
+    // 触发Store从localStorage重新加载数据
+    store.dispatch('game/forceRefresh');
     
-    // 优先从Store获取自定义图片数据（最新的数据管理方式）
-    const storeLevels = store.getters['game/currentLevels'] || [];
-    let customLevels: GameLevel[] = [];
-    
-    if (storeLevels.length > 0) {
-      // 将Store中的数据转换为游戏关卡格式，并修复异常数据
-      customLevels = storeLevels.map((level: any) => ({
-        image: level.image || level.url,
-        points: (level.points || level.warningPoints || []).map((point: any, index: number) => {
-          // 🚨 检测并修复异常的坐标数据
-          let fixedPoint = { ...point };
-          
-          // 检测异常数据：x:0, y:0, width:1, height:1 的全图覆盖情况
-          if (point.x === 0 && point.y === 0 && point.width === 1 && point.height === 1) {
-            console.warn(`⚠️ 游戏加载时发现异常坐标数据，自动修复点位 ${index + 1}:`, point);
-            
-            // 提供合理的默认坐标（比例坐标）
-            fixedPoint = {
-              ...point,
-              x: 0.1 + (index * 0.15), // 水平分布，从10%开始
-              y: 0.2 + (index * 0.1),  // 垂直分布，从20%开始  
-              width: 0.12,              // 12%宽度
-              height: 0.08,             // 8%高度
-            };
-            
-            console.log(`✅ 点位 ${index + 1} 已修复为:`, fixedPoint);
-          }
-          
-          return {
-            x: fixedPoint.x,
-            y: fixedPoint.y,
-            width: fixedPoint.width,
-            height: fixedPoint.height,
-            found: false,
-            highlightTitle: fixedPoint.highlightTitle || fixedPoint.title || '未命名警示点',
-            highlightDetail: fixedPoint.highlightDetail || fixedPoint.description || '请添加详细说明'
-          };
-        })
-      }));
-      console.log('🎨 从Store加载自定义图片数据:', customLevels.length, '个关卡（已修复异常数据）');
-    } else {
-      // 如果Store中没有数据，作为向后兼容，尝试加载旧版本数据
-      const savedLevels = localStorage.getItem('gameLevels');
-      
-      if (savedLevels) {
-        try {
-          const parsedLevels = JSON.parse(savedLevels);
-          if (Array.isArray(parsedLevels) && parsedLevels.length > 0) {
-            // 验证数据结构
-            customLevels = parsedLevels.filter((level: any) => 
-              level.image && 
-              Array.isArray(level.points) &&
-              typeof level.image === 'string'
-            );
-            console.log('⚠️ 从旧版本gameLevels加载数据:', customLevels.length, '个关卡');
-            
-            // 建议用户使用新的管理界面
-            if (customLevels.length > 0) {
-              console.warn('检测到旧版本数据，建议使用图片管理界面重新管理图片数据');
-            }
-          }
-        } catch (e) {
-          console.error('解析旧版本gameLevels数据失败:', e);
-        }
-      }
-    }
-    
-    // 合并预置图片和自定义图片
-    const allLevels = [...presetLevels, ...customLevels];
-    
-    // 确保所有点的found状态都是false
-    allLevels.forEach((level: GameLevel) => {
-      if (level.points) {
-        level.points.forEach((point: PuzzlePoint) => {
-          point.found = false;
-        });
-      }
-    });
-    
-    dynamicGameLevels.value = allLevels;
-    
-    // 关卡数由Store管理，这里只记录可用关卡数
-    console.log('🎮 总共可用关卡:', allLevels.length, '个，有效游戏关卡数:', effectiveGameLevels.value);
+    console.log('🎮 数据加载完成，可用关卡数:', allAvailableLevels.value.length);
     
   } catch (error) {
     console.error('❌ 加载游戏数据失败:', error);
-    // 如果加载失败，使用内置的默认数据
-    dynamicGameLevels.value = [];
-    console.log('🔄 使用内置默认数据, 可用关卡:', presetImages.length, '个，有效游戏关卡数:', effectiveGameLevels.value);
   }
 };
 

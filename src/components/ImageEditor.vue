@@ -254,7 +254,21 @@
 import { ref, reactive, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Expand, Fold, Refresh } from '@element-plus/icons-vue'
-import type { GameImage, WarningPoint, DrawMode, ConnectionLineType } from '../types/image'
+import type { GameLevel, PuzzlePoint, ConnectionType } from '../types/puzzle'
+
+// 定义组件所需的绘制模式类型
+type DrawMode = 'select' | 'rectangle' | 'move' | 'delete'
+
+// 扩展PuzzlePoint接口，添加编辑器所需的字段
+interface ExtendedPuzzlePoint extends PuzzlePoint {
+  id?: string  // 编辑器中用于标识的ID
+  connectionOffset?: { x: number; y: number }  // 连接线偏移
+}
+
+// 为了兼容性，创建类型别名
+type GameImage = GameLevel
+type WarningPoint = ExtendedPuzzlePoint
+type ConnectionLineType = ConnectionType
 
 // 添加默认导出
 defineOptions({

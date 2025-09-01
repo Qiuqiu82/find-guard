@@ -143,8 +143,8 @@
               </div>
               
               <!-- 警示点数量标识 -->
-              <div class="warning-points-badge" v-if="image.warningPoints.length > 0">
-                {{ image.warningPoints.length }} 个警示点
+              <div class="warning-points-badge" v-if="getWarningPointsCount(image) > 0">
+                {{ getWarningPointsCount(image) }} 个警示点
               </div>
             </div>
             
@@ -165,7 +165,7 @@
               <div class="image-stats">
                 <span class="stat-item">
                   <el-icon><View /></el-icon>
-                  {{ image.warningPoints.length }} 警示点
+                  {{ getWarningPointsCount(image) }} 警示点
                 </span>
                 <span class="stat-item">
                   <el-icon><Clock /></el-icon>
@@ -261,7 +261,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, defineAsyncComponent } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { 
@@ -273,22 +273,24 @@ import {
   FullScreen, 
   Edit, 
   View, 
-  Clock, 
-  Search,
+  Clock,
   Document
 } from '@element-plus/icons-vue'
 import { presetImages } from '../../../data/presetImages'
-import type { GameImage } from '../../../types/image'
+import type { GameLevel } from '../../../types/puzzle'
 
 
 // 路由
 const router = useRouter()
 
-// 页面标题
-const pageTitle = '图片管理'
+// 定义图片数据类型，扩展GameLevel接口
+interface ImageData extends Omit<GameLevel, 'id'> {
+  id: string  // 覆盖GameLevel的id，使其必填
+  size: number  // 添加文件大小字段
+}
 
 // 响应式数据
-const imagesList = ref<GameImage[]>([])
+const imagesList = ref<ImageData[]>([])
 const searchKeyword = ref('')
 const filterType = ref('all')
 const showUploadDialog = ref(false)
@@ -301,7 +303,11 @@ const importFileList = ref<any[]>([])
 const totalImages = computed(() => imagesList.value.length)
 const presetImagesCount = computed(() => imagesList.value.filter(img => img.id.startsWith('preset-')).length)
 const customImagesCount = computed(() => imagesList.value.filter(img => !img.id.startsWith('preset-')).length)
-const totalWarningPoints = computed(() => imagesList.value.reduce((total, img) => total + img.warningPoints.length, 0))
+const totalWarningPoints = computed(() => imagesList.value.reduce((total, img) => {
+  // 优先使用 points 字段，如果没有则使用 warningPoints 字段
+  const points = img.points || img.warningPoints || []
+  return total + points.length
+}, 0))
 
 const filteredImages = computed(() => {
   let filtered = imagesList.value
@@ -325,8 +331,24 @@ const filteredImages = computed(() => {
 
 // 方法
 const initializeImages = () => {
-  // 加载预置图片
-  imagesList.value = [...presetImages]
+  // 加载预置图片并转换为统一格式
+  imagesList.value = presetImages.map((img: any, index: number) => {
+    const imageName = img.name || img.url.split('/').pop()?.split('.')[0] || 'unknown'
+    const uniqueId = `preset-${imageName}-${index}`
+    
+    return {
+      id: uniqueId,
+      name: img.name || `预置图片${index + 1}`,
+      url: img.url,
+      size: 0, // 预置图片没有大小信息
+      width: 1920,
+      height: 945,
+      points: img.warningPoints || [], // 预置图片使用 warningPoints
+      warningPoints: img.warningPoints || [], // 保持兼容性
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    } as ImageData
+  })
   
   // 从 localStorage 加载自定义图片
   try {
@@ -338,13 +360,19 @@ const initializeImages = () => {
   } catch (error) {
     console.warn('Failed to load custom images:', error)
   }
+  
+  console.log('📁 已初始化图片列表:', {
+    total: imagesList.value.length,
+    preset: imagesList.value.filter(img => img.id.startsWith('preset-')).length,
+    custom: imagesList.value.filter(img => !img.id.startsWith('preset-')).length
+  })
 }
 
-const handleFileChange = (file: any, fileList: any[]) => {
+const handleFileChange = (file: any) => {
   console.log('选择的文件:', file)
 }
 
-const handleImportFileChange = (file: any, fileList: any[]) => {
+const handleImportFileChange = (file: any) => {
   console.log('选择的导入文件:', file)
 }
 
@@ -356,14 +384,15 @@ const uploadImages = () => {
   
   // 模拟上传过程
   fileList.value.forEach((file, index) => {
-    const newImage: GameImage = {
+    const newImage: ImageData = {
       id: `custom-${Date.now()}-${index}`,
       name: file.name,
       url: URL.createObjectURL(file.raw),
       size: file.size,
       width: 1920, // 默认尺寸
       height: 1080,
-      warningPoints: [],
+      points: [], // 使用 points 字段
+      warningPoints: [], // 保持兼容性
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     }
@@ -394,7 +423,7 @@ const importImages = () => {
       
       if (data.images && Array.isArray(data.images)) {
         // 导入多张图片
-        data.images.forEach((img: GameImage) => {
+        data.images.forEach((img: any) => {
           if (!imagesList.value.find(existing => existing.id === img.id)) {
             imagesList.value.push(img)
           }
@@ -442,6 +471,13 @@ const exportAllData = () => {
 
 const refreshImages = () => {
   initializeImages()
+  
+  // 刷新所有图片的最新编辑数据
+  imagesList.value.forEach(image => {
+    refreshImageData(image.id)
+  })
+  
+  console.log('🔄 已刷新所有图片数据')
   ElMessage.info('图片列表已刷新')
 }
 
@@ -465,14 +501,14 @@ const clearAllImages = async () => {
 
 
 
-const editImage = (image: GameImage) => {
+const editImage = (image: ImageData) => {
   // 将图片数据保存到localStorage，供全屏编辑页面使用
   localStorage.setItem(`image_${image.id}`, JSON.stringify(image))
   // 跳转到全屏编辑页面
   router.push(`/admin/images/editor/${image.id}`)
 }
 
-const editImageFullscreen = (image: GameImage) => {
+const editImageFullscreen = (image: ImageData) => {
   // 将图片数据保存到localStorage，供全屏编辑页面使用
   localStorage.setItem(`image_${image.id}`, JSON.stringify(image))
   // 直接跳转到全屏编辑页面，不创建新标签页
@@ -519,9 +555,103 @@ const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('zh-CN')
 }
 
+// 获取警示点数量（优先从localStorage加载最新数据）
+const getWarningPointsCount = (image: ImageData) => {
+  try {
+    // 尝试从localStorage加载最新的编辑数据
+    const savedData = localStorage.getItem(`image_${image.id}`)
+    if (savedData) {
+      const parsedData = JSON.parse(savedData)
+      const points = parsedData.points || parsedData.puzzlePoints || parsedData.warningPoints || []
+      return points.length
+    }
+  } catch (error) {
+    console.warn('Failed to load latest data for image:', image.id, error)
+  }
+  
+  // 如果没有localStorage数据，使用图片本身的数据
+  const points = image.points || image.warningPoints || []
+  return points.length
+}
+
+// 刷新单个图片的数据（从localStorage加载最新编辑数据）
+const refreshImageData = (imageId: string) => {
+  try {
+    const savedData = localStorage.getItem(`image_${imageId}`)
+    if (savedData) {
+      const parsedData = JSON.parse(savedData)
+      
+      // 找到并更新对应的图片数据
+      const imageIndex = imagesList.value.findIndex(img => img.id === imageId)
+      if (imageIndex !== -1) {
+        const currentImage = imagesList.value[imageIndex]
+        
+        // 更新警示点数据，保持其他字段不变
+        imagesList.value[imageIndex] = {
+          ...currentImage,
+          points: parsedData.points || parsedData.puzzlePoints || parsedData.warningPoints || [],
+          warningPoints: parsedData.points || parsedData.puzzlePoints || parsedData.warningPoints || [], // 保持兼容性
+          updatedAt: parsedData.updatedAt || new Date().toISOString()
+        }
+        
+        console.log(`✅ 已刷新图片 ${imageId} 的数据，警示点数量:`, imagesList.value[imageIndex].points?.length || 0)
+        
+        // 如果是自定义图片，保存到localStorage
+        if (!imageId.startsWith('preset-')) {
+          saveCustomImages()
+        }
+      }
+    }
+  } catch (error) {
+    console.warn('Failed to refresh image data:', imageId, error)
+  }
+}
+
+// 处理页面可见性变化，从编辑器返回时自动刷新数据
+const handleVisibilityChange = () => {
+  if (!document.hidden) {
+    // 页面变为可见时，刷新所有图片数据
+    console.log('🔄 页面重新可见，刷新图片数据')
+    setTimeout(() => {
+      refreshImages()
+    }, 100) // 小延迟确保数据已保存
+  }
+}
+
+// 存储事件处理器引用，用于清理
+let storageHandler: ((e: StorageEvent) => void) | null = null
+
 // 生命周期
 onMounted(() => {
   initializeImages()
+  
+  // 监听页面可见性变化
+  document.addEventListener('visibilitychange', handleVisibilityChange)
+  
+  // 监听localStorage变化，实时同步数据
+  storageHandler = (e: StorageEvent) => {
+    if (e.key && e.key.startsWith('image_')) {
+      const imageId = e.key.replace('image_', '')
+      console.log('🔄 检测到图片数据变化:', imageId)
+      // 延迟刷新，确保数据已完全保存
+      setTimeout(() => {
+        refreshImageData(imageId)
+      }, 100)
+    }
+  }
+  
+  window.addEventListener('storage', storageHandler)
+})
+
+// 在组件卸载时清理事件监听器
+onUnmounted(() => {
+  document.removeEventListener('visibilitychange', handleVisibilityChange)
+  
+  // 移除storage事件监听器
+  if (storageHandler) {
+    window.removeEventListener('storage', storageHandler)
+    storageHandler = null
+  }
 })
 </script>
 
