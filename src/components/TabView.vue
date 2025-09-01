@@ -1,33 +1,39 @@
 <template>
   <div class="admin-tabs" :class="{ 'fixed': fixedTags }">
-    <el-tabs
-      v-model="activeTab"
-      type="card"
-      @tab-click="handleTabClick"
-      @tab-remove="removeTab"
-    >
-      <el-tab-pane
-        v-for="tab in tabs"
-        :key="tab.fullPath"
-        :label="tab.title"
-        :name="tab.fullPath"
-        :closable="!tab.affix"
+    <div class="tabs-container">
+      <!-- 返回主页按钮 -->
+      <el-button 
+        v-if="!isHomePage"
+        type="text" 
+        class="home-btn"
+        @click="goToHomePage"
+        title="返回游戏设置"
       >
-        <template #label>
-          <span>{{ tab.title }}</span>
-        </template>
-      </el-tab-pane>
-    </el-tabs>
+        <el-icon><ArrowLeft /></el-icon>
+      </el-button>
+      
+      <!-- 当前页面标题 -->
+      <div class="current-page-title">
+        <el-icon v-if="currentPageIcon">
+          <component :is="currentPageIcon" />
+        </el-icon>
+        <span>{{ currentPageTitle }}</span>
+      </div>
+    </div>
   </div>
 </template>
 
 <script lang="ts">
 import { computed, defineComponent } from 'vue'
 import { useStore } from 'vuex'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
+import { ArrowLeft } from '@element-plus/icons-vue'
 
 export default defineComponent({
   name: 'TabView',
+  components: {
+    ArrowLeft
+  },
   props: {
     fixedTags: {
       type: Boolean,
@@ -37,37 +43,38 @@ export default defineComponent({
   setup(props) {
     const store = useStore()
     const router = useRouter()
+    const route = useRoute()
 
     // 计算属性
     const activeTab = computed(() => store.getters['tabs/activeTab'])
     const tabs = computed(() => store.getters['tabs/allTabs'])
+    
+    // 当前页面信息
+    const currentPageTitle = computed(() => {
+      return route.meta?.title || '未知页面'
+    })
+    
+    const currentPageIcon = computed(() => {
+      return route.meta?.icon
+    })
+    
+    // 判断是否在主页（游戏设置页）
+    const isHomePage = computed(() => {
+      return route.path === '/admin/settings'
+    })
 
     // 方法
-    const handleTabClick = (tab: any) => {
-      // 使用 tab.name 作为完整路径进行路由跳转
-      if (tab.name && tab.name !== activeTab.value) {
-        router.push(tab.name)
-      }
-    }
-
-    const removeTab = async (targetFullPath: string) => {
-      // 调用store的removeTab action
-      const nextPath = await store.dispatch('tabs/removeTab', targetFullPath)
-      
-      // 如果返回了下一个路径，则跳转
-      if (nextPath) {
-        router.push(nextPath)
-      } else {
-        // 如果没有其他标签页，跳转到设置页面
-        router.push('/admin/settings')
-      }
+    const goToHomePage = () => {
+      router.push('/admin/settings')
     }
 
     return {
       activeTab,
       tabs,
-      handleTabClick,
-      removeTab
+      currentPageTitle,
+      currentPageIcon,
+      isHomePage,
+      goToHomePage
     }
   }
 })
@@ -86,48 +93,64 @@ export default defineComponent({
   z-index: 999;
 }
 
+.tabs-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 48px;
+}
+
+.home-btn {
+  padding: 8px;
+  border-radius: 6px;
+  color: #666;
+  font-size: 16px;
+  transition: all 0.3s ease;
+}
+
+.home-btn:hover {
+  color: #1e1c72;
+  background-color: #f5f5f5;
+}
+
+.current-page-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.current-page-title .el-icon {
+  font-size: 18px;
+  color: #1e1c72;
+}
+
+.current-page-title span {
+  line-height: 1;
+}
+
 /* 暗色主题 */
 :deep(.dark-theme) .admin-tabs {
   background-color: #1f1f1f;
   border-bottom-color: #303030;
 }
 
-:deep(.dark-theme) .admin-tabs .el-tabs__item {
+:deep(.dark-theme) .home-btn {
   color: #e6e6e6;
-  background-color: #2a2a2a;
-  border-color: #404040;
 }
 
-:deep(.dark-theme) .admin-tabs .el-tabs__item:hover {
+:deep(.dark-theme) .home-btn:hover {
   color: #fff;
   background-color: #3a3a3a;
 }
 
-:deep(.dark-theme) .admin-tabs .el-tabs__item.is-active {
-  color: #fff;
-  background-color: #1e1c72;
-  border-color: #1e1c72;
-  font-weight: 600;
+:deep(.dark-theme) .current-page-title {
+  color: #e6e6e6;
 }
 
-/* 标签页样式优化 */
-:deep(.admin-tabs .el-tabs__item) {
-  color: #333;
-  font-weight: 500;
-  transition: all 0.3s ease;
-}
-
-:deep(.admin-tabs .el-tabs__item:hover) {
+:deep(.dark-theme) .current-page-title .el-icon {
   color: #1e1c72;
-}
-
-:deep(.admin-tabs .el-tabs__item.is-active) {
-  color: #1e1c72;
-  font-weight: 600;
-}
-
-/* 标签页内容区域样式 */
-:deep(.admin-tabs .el-tabs__content) {
-  background-color: transparent;
 }
 </style> 

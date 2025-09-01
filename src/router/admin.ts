@@ -67,16 +67,6 @@ export const adminRoutes: RouteRecordRaw[] = [
           icon: 'InfoFilled',
           keepAlive: true
         }
-      },
-      {
-        path: 'test',
-        name: 'AdminTest',
-        component: () => import('../views/admin/Test.vue'),
-        meta: {
-          title: '测试页面',
-          icon: 'InfoFilled',
-          keepAlive: false
-        }
       }
     ]
   }

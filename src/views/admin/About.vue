@@ -60,8 +60,8 @@
         
         <div class="features-list">
           <h3>功能特性</h3>
-          <el-row :gutter="20">
-            <el-col :span="8">
+          <el-row :gutter="20" class="features-row">
+            <el-col :span="8" :xs="24" :sm="12" :md="8">
               <div class="feature-item">
                 <div class="feature-icon">
                   <el-icon size="24"><Setting /></el-icon>
@@ -71,7 +71,7 @@
               </div>
             </el-col>
             
-            <el-col :span="8">
+            <el-col :span="8" :xs="24" :sm="12" :md="8">
               <div class="feature-item">
                 <div class="feature-icon">
                   <el-icon size="24"><Picture /></el-icon>
@@ -81,7 +81,7 @@
               </div>
             </el-col>
             
-            <el-col :span="8">
+            <el-col :span="8" :xs="24" :sm="24" :md="8">
               <div class="feature-item">
                 <div class="feature-icon">
                   <el-icon size="24"><DataAnalysis /></el-icon>
@@ -95,8 +95,8 @@
         
         <div class="system-status">
           <h3>系统状态</h3>
-          <el-row :gutter="20">
-            <el-col :span="6">
+          <el-row :gutter="20" class="status-row">
+            <el-col :span="6" :xs="12" :sm="12" :md="6">
               <div class="status-item">
                 <div class="status-icon success">
                   <el-icon size="20"><Check /></el-icon>
@@ -108,7 +108,7 @@
               </div>
             </el-col>
             
-            <el-col :span="6">
+            <el-col :span="6" :xs="12" :sm="12" :md="6">
               <div class="status-item">
                 <div class="status-icon info">
                   <el-icon size="20"><InfoFilled /></el-icon>
@@ -120,7 +120,7 @@
               </div>
             </el-col>
             
-            <el-col :span="6">
+            <el-col :span="6" :xs="12" :sm="12" :md="6">
               <div class="status-item">
                 <div class="status-icon warning">
                   <el-icon size="20"><Warning /></el-icon>
@@ -132,7 +132,7 @@
               </div>
             </el-col>
             
-            <el-col :span="6">
+            <el-col :span="6" :xs="12" :sm="12" :md="6">
               <div class="status-item">
                 <div class="status-icon success">
                   <el-icon size="20"><Connection /></el-icon>
@@ -146,20 +146,20 @@
           </el-row>
         </div>
         
-        <div class="contact-info">
+        <!-- <div class="contact-info">
           <h3>技术支持</h3>
           <p>如需技术支持或有任何问题，请联系系统管理员。</p>
           <div class="contact-details">
             <div class="contact-item">
               <span class="contact-label">技术支持</span>
-              <span class="contact-value">admin@example.com</span>
+              <span class="contact-value">3204953276@qq.com</span>
             </div>
             <div class="contact-item">
               <span class="contact-label">系统维护</span>
-              <span class="contact-value">system@example.com</span>
+              <span class="contact-value">qiuqiuya82@qq.com</span>
             </div>
           </div>
-        </div>
+        </div> -->
       </div>
     </el-card>
   </div>
@@ -167,7 +167,6 @@
 
 <script setup lang="ts">
 import { onMounted } from 'vue'
-import { useStore } from 'vuex'
 import {
   Setting,
   Picture,
@@ -177,8 +176,6 @@ import {
   Warning,
   Connection
 } from '@element-plus/icons-vue'
-
-const store = useStore()
 
 onMounted(() => {
   // 页面加载完成后的初始化逻辑
@@ -392,22 +389,86 @@ onMounted(() => {
   font-family: 'Courier New', monospace;
 }
 
+/* 布局优化 */
+.features-row,
+.status-row {
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.features-row .el-col,
+.status-row .el-col {
+  margin-bottom: 10px;
+  min-height: 80px; /* 确保最小高度，避免内容重叠 */
+}
+
+.features-list {
+  margin-bottom: 10px; /* 增加与下一个模块的间距 */
+  clear: both; /* 清除浮动 */
+}
+
+.system-status {
+  margin-top: 10px; /* 确保与上一个模块有足够间距 */
+  clear: both; /* 清除浮动 */
+}
+
 /* 响应式 */
+@media (max-width: 1200px) {
+  .features-row .el-col {
+    min-height: 140px;
+  }
+  
+  .status-row .el-col {
+    min-height: 100px;
+  }
+}
+
 @media (max-width: 768px) {
   .tech-stack {
     grid-template-columns: 1fr;
   }
   
-  .el-col {
+  .features-row .el-col,
+  .status-row .el-col {
     margin-bottom: 16px;
+    min-height: auto; /* 移动设备上不限制高度 */
   }
   
   .feature-item {
-    margin-bottom: 16px;
+    margin-bottom: 0; /* 移除额外的margin，因为已经有el-col的margin-bottom */
+    padding: 20px 16px; /* 调整内边距 */
   }
   
   .status-item {
-    margin-bottom: 16px;
+    margin-bottom: 0; /* 移除额外的margin */
+    padding: 12px; /* 调整内边距 */
+  }
+  
+  .features-list {
+    margin-bottom: 32px; /* 移动设备上稍微减少间距 */
+  }
+  
+  .system-status {
+    margin-top: 32px;
+  }
+}
+
+@media (max-width: 480px) {
+  .feature-item {
+    padding: 16px 12px;
+  }
+  
+  .status-item {
+    padding: 10px;
+    flex-direction: column;
+    text-align: center;
+    gap: 8px;
+  }
+  
+  .status-icon {
+    width: 32px;
+    height: 32px;
   }
 }
 </style> 

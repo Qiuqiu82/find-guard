@@ -4,8 +4,8 @@
     <div v-if="isFullscreenEdit" class="fullscreen-edit-container">
       <!-- 游戏顶部导航栏 -->
       <div class="game-header">
-        <!-- 爱心生命值 -->
-        <div class="hearts">
+        <!-- 爱心生命值 - 隐藏但保留占位 -->
+        <div class="hearts hearts-hidden">
           <div class="heart" v-for="i in 3" :key="i">
             <img v-if="hearts >= i" src="@/assets/icon/a-all.png" class="heart-full" alt="满爱心" />
             <img v-else-if="hearts === i - 0.5" 
@@ -2274,8 +2274,9 @@ const loadImageFromRoute = () => {
       
       return true;
     } else {
-      console.error('找不到图片数据，ID:', imageId);
-      ElMessage.error('找不到指定的图片数据');
+      console.warn('找不到图片数据，ID:', imageId, '自动重定向到图片管理页面');
+      // 不显示错误信息，静默重定向到图片管理页面，提升用户体验
+      router.push('/admin/images');
       return false;
     }
   } catch (error) {
@@ -4187,6 +4188,11 @@ button {
   gap: 8px;
   margin-left: 20px;
   margin-top: 0;
+}
+
+/* 隐藏爱心但保留占位空间 */
+.fullscreen-edit-container .hearts-hidden {
+  visibility: hidden;
 }
 
 .fullscreen-edit-container .heart {

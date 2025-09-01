@@ -56,9 +56,9 @@
             <el-icon><Expand /></el-icon>
           </el-button>
           
-                     <el-breadcrumb separator="/">
+                     <!-- <el-breadcrumb separator="/">
              <el-breadcrumb-item>{{ currentPageTitle }}</el-breadcrumb-item>
-           </el-breadcrumb>
+           </el-breadcrumb> 面包屑导航-->
         </div>
         
         <div class="header-right">
@@ -212,17 +212,22 @@ const colorWeak = computed(() => store.state.app.colorWeak)
 // 菜单路由
 const menuRoutes = computed(() => {
   return router.getRoutes()
-    .filter(route => route.path.startsWith('/admin') && route.meta?.title && route.path !== '/admin')
+    .filter(route => 
+      route.path.startsWith('/admin') && 
+      route.meta?.title && 
+      route.path !== '/admin' &&
+      !route.meta?.hidden
+    )
     .map(route => ({
       path: route.path.replace('/admin/', ''),
       meta: route.meta
     }))
 })
 
-// 当前页面标题
-const currentPageTitle = computed(() => {
-  return route.meta?.title || '未知页面'
-})
+// 当前页面标题(由TabView组件处理)
+// const currentPageTitle = computed(() => {
+//   return route.meta?.title || '未知页面'
+// })
 
 
 
@@ -321,11 +326,11 @@ const logout = () => {
 
 // 响应式处理
 const handleResize = () => {
-  if (window.innerWidth < 1280) {
-    store.commit('app/SET_SIDEBAR_COLLAPSED', true)
-  }
+  // 只在小屏幕（手机）上使用抽屉模式，但不自动折叠侧边栏
   if (window.innerWidth < 768) {
     store.commit('app/SET_SIDEBAR_DRAWER', true)
+  } else {
+    store.commit('app/SET_SIDEBAR_DRAWER', false)
   }
 }
 </script>
@@ -585,12 +590,7 @@ const handleResize = () => {
   color: #e6e6e6;
 }
 
-/* 响应式 */
-@media (max-width: 1280px) {
-  .admin-sidebar {
-    width: 64px !important;
-  }
-}
+/* 响应式 - 移除1280px下的自动折叠，保持侧边栏完整显示 */
 
 @media (max-width: 768px) {
   .admin-sidebar {
